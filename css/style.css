@@ -171,3 +171,10 @@ td .muted{font-size:11px}
 .notfound .big{font-size:40px;margin-bottom:8px}
 table.admin td,table.admin th{font-size:12.5px;padding:8px 7px;vertical-align:middle}
 .right{text-align:right}
+
+/* ===== 차주 알림(1단계): 화면 점멸 ===== */
+#flashOverlay{position:fixed;inset:0;background:var(--blue);opacity:0;pointer-events:none;z-index:9999}
+#flashOverlay.on{animation:plFlash .5s ease 3}
+@keyframes plFlash{0%,100%{opacity:0}50%{opacity:.22}}
+.req.fresh{animation:plPulse 1.6s ease 2}
+@keyframes plPulse{0%,100%{box-shadow:0 0 0 0 rgba(54,92,137,0)}50%{box-shadow:0 0 0 4px rgba(54,92,137,.18)}}
