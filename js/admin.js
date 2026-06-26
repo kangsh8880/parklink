@@ -98,3 +98,27 @@ $('#resetBtn').addEventListener('click', async () => {
 
 setInterval(render, 3000);
 render();
+
+function initAssistant() {
+  if (!window.PARKASSIST) return;
+  PARKASSIST.init({
+    title: 'AI 음성 — 차량 등록',
+    greet: '등록할 차량 정보를 말씀하세요. 차량명, 전화번호, 개월수 순서로요.',
+    helpText: '이 화면은 차량을 등록·관리하는 화면입니다.\n마이크(말하기) 버튼을 누르고 차량명, 차주 전화번호, 구독 개월수를 말하면 등록돼요.\n예) "소나타 99라1234, 010-4411-3606, 3개월 등록".',
+    interpret: async (t) => {
+      const v = PARKVOICE.parseVehicle(t);
+      if (!v.phone || !v.months) return null;
+      const nm = v.name || '내 차량';
+      return {
+        label: `${nm} / ${v.phone} / ${v.months}개월 등록`,
+        confirm: `${nm}, 번호 ${v.phone}, ${v.months}개월로 등록할까요?`,
+        run: async () => {
+          const veh = await PARKLINK.createVehicle({ name: nm, ownerPhone: v.phone, months: v.months });
+          render();
+          return `${veh.name} 등록 완료. 토큰은 ${veh.token.split('').join(' ')} 입니다.`;
+        },
+      };
+    },
+  });
+}
+initAssistant();
