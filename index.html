@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PARKLINK · 양방향 안심 스마트 주차패드 (데모)</title>
+<title>PARKLINK · 양방향 안심 스마트 주차패드</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -15,40 +15,30 @@
 </div>
 
 <div class="wrap">
-  <h1>양방향 안심 스마트 주차패드 — 동작 데모</h1>
-  <p class="lead">3개 화면을 각각 다른 탭(또는 창)에서 열어두면, 실시간으로 메시지가 오가는 흐름을 테스트할 수 있습니다.</p>
+  <h1>양방향 안심 스마트 주차패드</h1>
+  <p class="lead">차량별 고유 QR + 월 구독 기반. 스캔하면 번호 노출 없이 차주에게 안심 연결됩니다.</p>
 
   <div class="note">
     <span>ⓘ</span>
-    <span>테스트 방법: <b>발신자</b>에서 사유 전송 → <b>차주</b>에서 응답 선택 → <b>차량 패널</b>과 발신자 화면에 즉시 반영됩니다. 백엔드 없이 브라우저 안에서 동작하는 프로토타입입니다.</span>
+    <span>먼저 <b>구독 신청</b>에서 차량을 등록하면 전용 QR이 발급됩니다. 발급된 링크로 차주·패널·발신자 화면을 테스트하세요. (백엔드 없이 브라우저에서 동작하는 프로토타입)</span>
   </div>
 
   <div class="hub">
-    <a href="sender.html">
-      <div class="ico" style="background:var(--ice);color:var(--blue)">📷</div>
-      <b>발신자 화면</b>
-      <small>QR 스캔 후 — 번호 없이 사유 전송</small>
+    <a href="subscribe.html">
+      <div class="ico" style="background:var(--ice);color:var(--blue)">➕</div>
+      <b>구독 신청 / 차량 등록</b>
+      <small>개월 수 선택 → 전용 QR 발급</small>
     </a>
-    <a href="owner.html">
-      <div class="ico" style="background:var(--peach);color:var(--red)">🔔</div>
-      <b>차주 화면</b>
-      <small>요청 수신 — 정형 응답 선택</small>
-    </a>
-    <a href="panel.html" target="_blank">
-      <div class="ico" style="background:var(--mint);color:var(--navy)">🖥️</div>
-      <b>차량 E-ink 패널</b>
-      <small>차주 응답을 즉시 표시</small>
-    </a>
-    <a href="dashboard.html">
-      <div class="ico" style="background:var(--lav);color:var(--navy)">📊</div>
-      <b>관리 대시보드</b>
-      <small>연락 이력 · 충격 로그</small>
+    <a href="admin.html">
+      <div class="ico" style="background:var(--lav);color:var(--navy)">🗂️</div>
+      <b>관리자 페이지</b>
+      <small>가입자·매핑 관리, 갱신 알림</small>
     </a>
   </div>
 
   <div class="card tint mt16">
-    <h2>이 제품의 핵심</h2>
-    <p style="font-size:13.5px">① <b>무번호 표시</b> — 패널에 전화번호 없음(QR/NFC만) &nbsp; ② <b>동적 안심연결</b> — 일회용 번호 중계, 양측 비공개 &nbsp; ③ <b style="color:var(--red)">양방향 응답표시 ★</b> — 차주 응답이 차량 화면에 즉시 표시(시장 전무 기능) &nbsp; ④ <b>충격감지 알림</b> &nbsp; ⑤ <b>무접착 거치</b></p>
+    <h2>방법 A — 토큰 기반 안심 매핑</h2>
+    <p style="font-size:13.5px">QR에는 차량 고유 <b>토큰</b>만 담깁니다(전화번호·이름 등 개인정보 미포함). 서버가 토큰↔차주를 매핑해 스캔 시 안심 연결합니다. 분실·매도 시 토큰 폐기/재발급이 가능하고, 차주 번호를 바꿔도 QR은 그대로 씁니다.</p>
   </div>
 
   <div class="row mt16">
@@ -57,6 +47,7 @@
   </div>
 </div>
 
+<script src="js/qrcode.min.js"></script>
 <script src="js/common.js"></script>
 <script src="js/index.js"></script>
 </body>

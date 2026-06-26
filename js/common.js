@@ -1,8 +1,16 @@
-/* PARKLINK 공통 모듈 - localStorage 기반 메시지 버스 (백엔드 없이 탭 간 실시간 동기화) */
+/* =========================================================================
+   PARKLINK 공통 모듈 (방법 A: 토큰 기반 차량 매핑 + 월 구독)
+   - 서버 데이터 모델(차량 매핑 테이블 / 구독)을 그대로 모사한 store 계층.
+   - 데모는 localStorage에 저장(같은 브라우저 탭 간 동기화).
+   - 실제 서비스 전환 시 이 store 계층만 백엔드 REST API로 교체하면 됨.
+   ========================================================================= */
 window.PARKLINK = (function () {
-  const KEY = 'parklink:state:v1';
+  const KEY = 'parklink:db:v2';
+  const DAY = 86400000;
+  const RENEW_DAYS = 14;             // 만료 2주(14일) 전부터 갱신 알림
+  const BASE = location.pathname.replace(/[^/]*$/, ''); // 현재 디렉토리 기준 경로
 
-  // 사유 프리셋 (발신자 선택지)
+  // 사유 프리셋
   const REASONS = [
     { key: 'block',   label: '차량 빼주세요',   desc: '통행 방해', urgency: '긴급', cls: 'u' },
     { key: 'contact', label: '접촉 / 문콕 발생', desc: '경미한 사고', urgency: '긴급', cls: 'u' },
@@ -10,120 +18,181 @@ window.PARKLINK = (function () {
     { key: 'light',   label: '라이트가 켜져 있어요', desc: '방전 주의', urgency: '보통', cls: 'n' },
     { key: 'misc',    label: '기타 문의',        desc: '간단한 연락', urgency: '낮음', cls: 'l' },
   ];
-
-  // 차주 정형 응답
   const REPLIES = ['3분 내 이동합니다', '곧 갑니다', '양보 부탁드립니다', '바로 연락드릴게요'];
-
   const LOCATIONS = ['지하 2층 · B구역', '지상 주차장 · 3열', '노상 · 12번 칸', '아파트 동측 주차면'];
 
-  // 차주 휴대폰 번호 기본값 (테스트용) — 발신자의 통화·문자가 이 번호로 연결됨
-  const DEFAULT_OWNER_PHONE = '010-4411-3606';
-
-  function _default() { return { requests: [], shocks: [], seq: 1, ownerPhone: DEFAULT_OWNER_PHONE }; }
-
+  function _default() { return { vehicles: [], requests: [], shocks: [] }; }
   function load() {
     try { return JSON.parse(localStorage.getItem(KEY)) || _default(); }
     catch (e) { return _default(); }
   }
-  function save(state) {
-    localStorage.setItem(KEY, JSON.stringify(state));
-    // 같은 탭에는 storage 이벤트가 안 오므로 커스텀 이벤트로 보완
+  function save(db) {
+    localStorage.setItem(KEY, JSON.stringify(db));
     window.dispatchEvent(new CustomEvent('parklink:local'));
   }
-
-  // 변경 구독 (다른 탭: storage / 같은 탭: parklink:local)
   function onUpdate(cb) {
     window.addEventListener('storage', function (e) { if (e.key === KEY) cb(load()); });
     window.addEventListener('parklink:local', function () { cb(load()); });
   }
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function makeToken() {
+    const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 7; i++) s += c[Math.floor(Math.random() * c.length)];
+    return 'PL' + s;
+  }
+  function addMonths(ts, m) {
+    const d = new Date(ts); d.setMonth(d.getMonth() + Number(m)); return d.getTime();
+  }
 
-  // ---- 액션 ----
-  function sendRequest(reasonKey) {
+  /* ---------------- 구독(차량) 관리 = 서버 매핑 테이블 ---------------- */
+  function listVehicles() { return load().vehicles.slice().sort((a, b) => b.createdAt - a.createdAt); }
+  function getVehicle(token) { return load().vehicles.find(v => v.token === token) || null; }
+
+  function createVehicle({ name, ownerPhone, months }) {
+    const db = load();
+    const now = Date.now();
+    const v = {
+      token: makeToken(),
+      name: name || '내 차량',
+      ownerPhone: ownerPhone,
+      months: Number(months),
+      createdAt: now,
+      startAt: now,
+      expireAt: addMonths(now, months),
+      renewNotified: false,
+    };
+    db.vehicles.push(v);
+    save(db);
+    return v;
+  }
+  function extendVehicle(token, addM) {
+    const db = load(); const v = db.vehicles.find(x => x.token === token);
+    if (v) {
+      const base = Math.max(v.expireAt, Date.now()); // 만료됐으면 오늘 기준 연장
+      v.expireAt = addMonths(base, addM);
+      v.months += Number(addM);
+      v.renewNotified = false;
+    }
+    save(db);
+  }
+  function setExpireInDays(token, days) {  // 테스트용: 만료일을 N일 후로 강제 설정
+    const db = load(); const v = db.vehicles.find(x => x.token === token);
+    if (v) { v.expireAt = Date.now() + days * DAY; v.renewNotified = false; }
+    save(db);
+  }
+  function setOwnerPhone(token, phone) {
+    const db = load(); const v = db.vehicles.find(x => x.token === token);
+    if (v) v.ownerPhone = phone;
+    save(db);
+  }
+  function removeVehicle(token) {
+    const db = load();
+    db.vehicles = db.vehicles.filter(v => v.token !== token);
+    db.requests = db.requests.filter(r => r.token !== token);
+    db.shocks = db.shocks.filter(s => s.token !== token);
+    save(db);
+  }
+  function markRenewNotified(token) {
+    const db = load(); const v = db.vehicles.find(x => x.token === token);
+    if (v) v.renewNotified = true; save(db);
+  }
+
+  // 구독 상태 계산
+  function statusOf(v) {
+    if (!v) return null;
+    const now = Date.now();
+    const daysLeft = Math.ceil((v.expireAt - now) / DAY);
+    const expired = now >= v.expireAt;
+    const renewDue = !expired && daysLeft <= RENEW_DAYS;
+    return {
+      daysLeft, expired, renewDue,
+      state: expired ? '만료' : (renewDue ? '만료임박' : '구독중'),
+      cls: expired ? 'red' : (renewDue ? 'peach' : 'blue'),
+    };
+  }
+  function vehicleStatus(token) { return statusOf(getVehicle(token)); }
+  function renewList() {  // 갱신 알림 대상(만료 2주 전~만료)
+    return listVehicles().filter(v => { const s = statusOf(v); return s.renewDue || s.expired; });
+  }
+
+  /* ---------------- 요청 / 응답 (차량 토큰 단위) ---------------- */
+  function sendRequest(token, reasonKey) {
     const r = REASONS.find(x => x.key === reasonKey);
-    const st = load();
+    const db = load();
     const req = {
-      id: uid(),
+      id: uid(), token,
       reason: r.label, desc: r.desc, urgency: r.urgency, cls: r.cls,
       location: LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)],
-      ts: Date.now(),
-      status: 'pending',   // pending | answered
-      reply: null, replyTs: null,
+      ts: Date.now(), status: 'pending', reply: null, replyTs: null,
     };
-    st.requests.unshift(req);
-    save(st);
+    db.requests.unshift(req);
+    save(db);
     return req.id;
   }
-
   function answerRequest(reqId, message) {
-    const st = load();
-    const req = st.requests.find(x => x.id === reqId);
+    const db = load(); const req = db.requests.find(x => x.id === reqId);
     if (req) { req.status = 'answered'; req.reply = message; req.replyTs = Date.now(); }
-    save(st);
+    save(db);
   }
+  function listRequests(token) { return load().requests.filter(r => r.token === token); }
+  function getRequest(id) { return load().requests.find(r => r.id === id) || null; }
+  function latestAnswered(token) { return load().requests.find(r => r.token === token && r.status === 'answered') || null; }
 
-  function logShock() {
+  function logShock(token) {
     const levels = ['약한 충격', '중간 충격', '강한 충격'];
-    const st = load();
-    st.shocks.unshift({ id: uid(), level: levels[Math.floor(Math.random() * levels.length)], ts: Date.now() });
-    save(st);
+    const db = load();
+    db.shocks.unshift({ id: uid(), token, level: levels[Math.floor(Math.random() * levels.length)], ts: Date.now() });
+    save(db);
   }
-
-  function latestAnswered() {
-    const st = load();
-    return st.requests.find(x => x.status === 'answered') || null;
-  }
-  function getRequest(id) { return load().requests.find(x => x.id === id) || null; }
+  function listShocks(token) { return load().shocks.filter(s => s.token === token); }
 
   function reset() { localStorage.removeItem(KEY); window.dispatchEvent(new CustomEvent('parklink:local')); }
 
-  // ---- 차주 번호 ----
-  function getOwnerPhone() { const st = load(); return st.ownerPhone || DEFAULT_OWNER_PHONE; }
-  function setOwnerPhone(num) { const st = load(); st.ownerPhone = num; save(st); }
-  function telDigits(num) { return String(num || '').replace(/[^0-9+]/g, ''); }
+  /* ---------------- URL / QR ---------------- */
+  function senderUrl(token) { return location.origin + BASE + 'sender.html?v=' + token; }
+  function panelUrl(token)  { return location.origin + BASE + 'panel.html?v=' + token; }
+  function ownerUrl(token)  { return location.origin + BASE + 'owner.html?v=' + token; }
+  function tokenFromUrl() { return new URLSearchParams(location.search).get('v'); }
 
-  // ---- 유틸 ----
-  function fmtTime(ts) {
-    const d = new Date(ts);
-    const p = n => String(n).padStart(2, '0');
-    return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  // 실제 스캔 가능한 QR (svg) — qrcode-generator(window.qrcode) 사용
+  function qrSvg(text, cellSize) {
+    const qr = window.qrcode(0, 'H');
+    qr.addData(text); qr.make();
+    return qr.createSvgTag({ cellSize: cellSize || 5, margin: 4, scalable: true });
   }
+  function qrDataUrl(text, cellSize) {
+    const qr = window.qrcode(0, 'H');
+    qr.addData(text); qr.make();
+    return qr.createDataURL(cellSize || 8, 16);
+  }
+
+  /* ---------------- 유틸 ---------------- */
+  function telDigits(num) { return String(num || '').replace(/[^0-9+]/g, ''); }
+  function fmtDate(ts) { const d = new Date(ts); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; }
+  function fmtTime(ts) { const d = new Date(ts); const p = n => String(n).padStart(2, '0'); return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; }
   function timeAgo(ts) {
     const s = Math.floor((Date.now() - ts) / 1000);
-    if (s < 5) return '방금 전';
-    if (s < 60) return s + '초 전';
-    const m = Math.floor(s / 60);
-    if (m < 60) return m + '분 전';
+    if (s < 5) return '방금 전'; if (s < 60) return s + '초 전';
+    const m = Math.floor(s / 60); if (m < 60) return m + '분 전';
     return Math.floor(m / 60) + '시간 전';
   }
   function urgencyBadge(u) {
     const cls = u === '긴급' ? 'urgent' : (u === '보통' ? 'normal' : 'low');
     return `<span class="badge ${cls}">${u}</span>`;
   }
-
-  // 데코용 QR (의사 모듈 패턴) - 실제 스캔 기능 아님, 데모 시각용
-  function qrSVG(size) {
-    const n = 21, m = size / n;
-    let seed = 7, rects = '';
-    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-    const sq = (c, r) => `<rect x="${c * m}" y="${r * m}" width="${m}" height="${m}" fill="#1b1b1b"/>`;
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
-      const f = (r < 8 && c < 8) || (r < 8 && c > n - 9) || (r > n - 9 && c < 8);
-      if (!f && rnd() > 0.52) rects += sq(c, r);
-    }
-    const finder = (fx, fy) =>
-      `<rect x="${fx * m}" y="${fy * m}" width="${7 * m}" height="${7 * m}" fill="#1b1b1b"/>` +
-      `<rect x="${(fx + 1) * m}" y="${(fy + 1) * m}" width="${5 * m}" height="${5 * m}" fill="#F3F1EA"/>` +
-      `<rect x="${(fx + 2) * m}" y="${(fy + 2) * m}" width="${3 * m}" height="${3 * m}" fill="#1b1b1b"/>`;
-    rects += finder(0, 0) + finder(n - 7, 0) + finder(0, n - 7);
-    return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
+  function statusBadge(s) {
+    const map = { '구독중': 'normal', '만료임박': 'urgent', '만료': 'low' };
+    return `<span class="badge ${map[s.state] === 'urgent' ? 'urgent' : (s.state === '구독중' ? 'ok' : 'low')}">${s.state}</span>`;
   }
 
   return {
-    REASONS, REPLIES, DEFAULT_OWNER_PHONE, load, onUpdate,
-    sendRequest, answerRequest, logShock, latestAnswered, getRequest, reset,
-    getOwnerPhone, setOwnerPhone, telDigits,
-    fmtTime, timeAgo, urgencyBadge, qrSVG,
+    REASONS, REPLIES, RENEW_DAYS, onUpdate, load, reset,
+    listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
+    setOwnerPhone, removeVehicle, markRenewNotified, vehicleStatus, renewList, statusOf,
+    sendRequest, answerRequest, listRequests, getRequest, latestAnswered, logShock, listShocks,
+    senderUrl, panelUrl, ownerUrl, tokenFromUrl, qrSvg, qrDataUrl,
+    telDigits, fmtDate, fmtTime, timeAgo, urgencyBadge, statusBadge,
   };
 })();

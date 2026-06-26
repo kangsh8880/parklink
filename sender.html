@@ -15,48 +15,47 @@
 </div>
 
 <div class="wrap-narrow">
-  <h1>주차 중인 차량에 연락</h1>
-  <p class="lead">전화번호를 몰라도 됩니다. 앱 설치·가입 없이 바로 전달됩니다.</p>
-
-  <div class="note">
-    <span>🔒</span>
-    <span>내 번호와 차주 번호 모두 <b>비공개</b>로 안전하게 중계됩니다.</span>
+  <!-- 유효하지 않음 / 만료 -->
+  <div id="invalid" class="notfound" style="display:none">
+    <div class="big">⚠️</div>
+    <p id="invalidMsg"></p>
   </div>
 
-  <!-- 사유 선택 단계 -->
-  <div id="step-select">
-    <h2>어떤 일로 연락하시나요?</h2>
-    <div class="reasons" id="reasonList"></div>
-  </div>
+  <!-- 정상 -->
+  <div id="valid" style="display:none">
+    <h1>주차 중인 차량에 연락</h1>
+    <p class="lead" id="vehLead">전화번호를 몰라도 됩니다. 앱 설치·가입 없이 바로 전달됩니다.</p>
 
-  <!-- 전송 후 상태 -->
-  <div id="step-sent" style="display:none">
-    <div class="card mint">
-      <h2>✓ 차주에게 전달되었습니다</h2>
-      <p class="muted" id="sentInfo"></p>
+    <div class="note"><span>🔒</span><span>내 번호와 차주 번호 모두 <b>비공개</b>로 안전하게 중계됩니다.</span></div>
+
+    <div id="step-select">
+      <h2>어떤 일로 연락하시나요?</h2>
+      <div class="reasons" id="reasonList"></div>
     </div>
 
-    <div class="card" id="waitingCard">
-      <div class="row">
-        <div class="spacer"><b>차주 응답 대기 중…</b></div>
-        <span class="muted" id="waitDots">●</span>
+    <div id="step-sent" style="display:none">
+      <div class="card mint">
+        <h2>✓ 차주에게 전달되었습니다</h2>
+        <p class="muted" id="sentInfo"></p>
       </div>
-      <p class="muted mt8">차주가 응답하면 이 화면과 차량 패널에 표시됩니다.</p>
+      <div class="card" id="waitingCard">
+        <div class="row"><div class="spacer"><b>차주 응답 대기 중…</b></div><span class="muted" id="waitDots">●</span></div>
+        <p class="muted mt8">차주가 응답하면 이 화면과 차량 패널에 표시됩니다.</p>
+      </div>
+      <div class="card tint" id="answerCard" style="display:none">
+        <p class="muted">차주 응답</p>
+        <p style="font-size:24px;font-weight:800;color:var(--blue)" id="answerMsg"></p>
+        <p class="muted mt8" id="answerTime"></p>
+      </div>
+      <a class="btn btn-primary mt8" id="callBtn" href="#">📞 차주에게 전화</a>
+      <a class="btn btn-outline mt8" id="smsBtn" href="#">✉️ 문자 보내기</a>
+      <p class="muted center mt8" id="privNote"></p>
+      <button class="btn btn-ghost mt16" id="againBtn" style="width:100%">다시 연락하기</button>
     </div>
-
-    <div class="card tint" id="answerCard" style="display:none">
-      <p class="muted">차주 응답</p>
-      <p style="font-size:24px;font-weight:800;color:var(--blue)" id="answerMsg"></p>
-      <p class="muted mt8" id="answerTime"></p>
-    </div>
-
-    <a class="btn btn-primary mt8" id="callBtn" href="#">📞 차주에게 전화</a>
-    <a class="btn btn-outline mt8" id="smsBtn" href="#">✉️ 문자 보내기</a>
-    <p class="muted center mt8" id="privNote"></p>
-    <button class="btn btn-ghost mt16" id="againBtn" style="width:100%">다시 연락하기</button>
   </div>
 </div>
 
+<script src="js/qrcode.min.js"></script>
 <script src="js/common.js"></script>
 <script src="js/sender.js"></script>
 </body>

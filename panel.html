@@ -11,15 +11,29 @@
 <body>
 <div class="panel-screen">
   <div class="eink">
-    <div class="topline"><span>주차 중 · 스캔하여 연락</span><span class="row" style="gap:6px"><span class="live"></span>E-INK</span></div>
+    <div class="topline"><span id="topLabel">주차 중 · 스캔하여 연락</span><span class="row" style="gap:6px"><span class="live"></span>E-INK</span></div>
 
-    <!-- 대기 상태: QR -->
-    <div id="standby">
-      <img class="qr" id="qrImg" src="images/parklink_qr.svg" alt="PARKLINK 연락 QR">
+    <!-- 차량 미지정 -->
+    <div id="nodata" class="standby" style="display:none">
+      차량이 지정되지 않았습니다.<br>관리자에서 차량 QR을 발급하세요.
+    </div>
+
+    <!-- 만료 -->
+    <div id="expired" style="display:none">
+      <div class="resp" style="border-color:var(--red)">
+        <div class="lbl">구독 상태</div>
+        <div class="msg" style="color:var(--red);font-size:24px">구독 만료</div>
+        <div class="why">갱신 후 이용 가능합니다</div>
+      </div>
+    </div>
+
+    <!-- 대기(QR) -->
+    <div id="standby" style="display:none">
+      <div class="qrwrap" id="qrBox"></div>
       <div class="standby">전화번호 비공개 · QR/NFC로 연결됩니다</div>
     </div>
 
-    <!-- 응답 표시 -->
+    <!-- 응답 -->
     <div id="response" class="resp" style="display:none">
       <div class="lbl">차주 응답</div>
       <div class="msg" id="respMsg"></div>
@@ -30,6 +44,7 @@
   </div>
 </div>
 
+<script src="js/qrcode.min.js"></script>
 <script src="js/common.js"></script>
 <script src="js/panel.js"></script>
 </body>

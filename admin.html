@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARKLINK · 관리자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <div><span class="brand">PARKLINK</span> <span class="sub">관리자</span></div>
+  <a class="home" href="index.html">← 허브</a>
+</div>
+
+<div class="wrap">
+  <h1>가입자 관리</h1>
+  <p class="lead">차량 토큰↔차주 매핑과 구독 상태를 관리합니다. (서버 매핑 테이블 모사)</p>
+
+  <div class="stats">
+    <div class="stat"><b id="kTotal">0</b><span>총 가입</span></div>
+    <div class="stat"><b id="kActive">0</b><span>구독중</span></div>
+    <div class="stat"><b id="kRenew">0</b><span>만료 임박</span></div>
+    <div class="stat"><b id="kExpired">0</b><span>만료</span></div>
+  </div>
+
+  <!-- 갱신 알림 -->
+  <div id="renewCard" class="card" style="display:none">
+    <h2>🔔 갱신 알림 대상 (만료 2주 전~만료)</h2>
+    <div id="renewList"></div>
+  </div>
+
+  <h2 class="mt16">가입자 목록</h2>
+  <div class="card flat" style="padding:0;overflow-x:auto">
+    <table class="admin" id="vtable">
+      <thead><tr>
+        <th>차량</th><th>차주번호</th><th>토큰</th><th>시작</th><th>만료</th>
+        <th>남은일</th><th>상태</th><th class="right">관리</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    <div id="empty" class="notfound" style="display:none">
+      <div class="big">🗂️</div>등록된 차량이 없습니다.<br>
+      <a class="muted" href="subscribe.html">구독 신청에서 차량을 등록하세요 →</a>
+    </div>
+  </div>
+
+  <div class="note mt16"><span>🧪</span><span>테스트: 각 행의 <b>만료-10일</b>/<b>만료처리</b> 버튼으로 갱신 알림·만료 동작을 즉시 확인할 수 있습니다.</span></div>
+
+  <div class="row mt8">
+    <a class="btn btn-outline btn-sm" href="subscribe.html">+ 차량 등록</a>
+    <span class="spacer"></span>
+    <button class="btn btn-ghost" id="resetBtn">전체 초기화</button>
+  </div>
+
+  <!-- QR 모달 대용 영역 -->
+  <div id="qrPanel" class="card" style="display:none">
+    <div class="row"><h2 style="margin:0" id="qrTitle">QR</h2><span class="spacer"></span>
+      <button class="btn btn-ghost" id="qrClose">닫기</button></div>
+    <div class="qrwrap" id="qrBox"></div>
+    <div class="copybox"><span class="grow" id="qrUrl"></span></div>
+  </div>
+</div>
+
+<script src="js/qrcode.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

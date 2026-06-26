@@ -140,3 +140,34 @@ hr{border:none;border-top:1px solid var(--line);margin:14px 0}
   .stats{grid-template-columns:1fr 1fr}
   .hub{grid-template-columns:1fr}
 }
+
+/* ===== v2: 구독·관리자·QR ===== */
+.badge.ok{background:var(--mint);color:#2C6E54}
+.banner{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px}
+.banner.renew{background:var(--peach);color:#9A5A1E}
+.banner.expired{background:#F7E2DF;color:var(--red)}
+.banner b{color:inherit}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px;margin:6px 0}
+.kv dt{color:var(--gray)} .kv dd{color:var(--ink);font-weight:500}
+.qrwrap{width:200px;margin:4px auto 10px}
+.qrwrap svg{width:100%;height:auto;display:block}
+.eink .qrwrap{width:170px;margin:6px auto 12px}
+.copybox{display:flex;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);
+  border-radius:10px;padding:8px 10px;font-size:12px;color:var(--gray);word-break:break-all}
+.copybox .grow{flex:1}
+.linkrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.linkrow a{font-size:12.5px;color:var(--blue);font-weight:700;border:1px solid var(--line);
+  border-radius:8px;padding:7px 11px;background:#fff}
+.linkrow a:hover{border-color:var(--blue)}
+.tokenpill{font-family:Consolas,monospace;font-weight:700;color:var(--navy);
+  background:var(--tint);border-radius:6px;padding:2px 8px;font-size:12.5px}
+.admin-actions{display:flex;flex-wrap:wrap;gap:6px}
+.admin-actions button{font-size:11.5px;padding:6px 9px;width:auto}
+td .muted{font-size:11px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.field .hint{font-size:11.5px;color:var(--gray);margin-top:4px}
+.notfound{text-align:center;padding:40px 16px;color:var(--gray)}
+.notfound .big{font-size:40px;margin-bottom:8px}
+table.admin td,table.admin th{font-size:12.5px;padding:8px 7px;vertical-align:middle}
+.right{text-align:right}
