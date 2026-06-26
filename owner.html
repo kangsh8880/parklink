@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARKLINK · 차주 알림</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="topbar">
+  <div><span class="brand">PARKLINK</span> <span class="sub">차주 알림</span></div>
+  <a class="home" href="index.html">← 허브</a>
+</div>
+
+<div class="wrap-narrow">
+  <h1>실시간 알림</h1>
+  <p class="lead">연락 요청에 정형 응답을 보내면, 차량 패널에 즉시 표시됩니다.</p>
+
+  <div id="shockBox"></div>
+
+  <h2>연락 요청</h2>
+  <div id="reqList"></div>
+  <div id="empty" class="card flat center muted" style="display:none">
+    아직 받은 요청이 없습니다.<br><span style="font-size:12px">발신자 화면에서 사유를 전송해 보세요.</span>
+  </div>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/owner.js"></script>
+</body>
+</html>
