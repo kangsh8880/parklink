@@ -55,6 +55,8 @@ async function send(key) {
     $('#step-sent').style.display = 'block';
     $('#sentInfo').textContent = `${r.reason} · ${r.location} · ${PARKLINK.fmtTime(r.ts)}`;
     setLinks(r);
+    // 차주에게 웹푸시 발송 트리거(잠금화면 알림)
+    if (window.PARKPUSH) PARKPUSH.notify(token, 'PARKLINK · ' + vehicle.name, `${r.reason} (${r.urgency}) · ${r.location}`);
   } catch (e) { alert('전송 실패: ' + e.message); }
 }
 

@@ -8,6 +8,8 @@ let phoneInit = false;
 let seenIds = null;       // 이미 본 요청 id 집합(null=초기화 전)
 let audioCtx = null;
 let notifReady = false;   // 알림 권한 + 오디오 활성화 여부
+let pushOn = false;       // 웹푸시 구독 완료
+let pushErr = null;
 let vehicleName = '차량';
 
 function initAudio() {
@@ -53,7 +55,9 @@ function updateNotifUI() {
   const btn = $('#notifBtn'), st = $('#notifStatus');
   if (perm === 'granted' && notifReady) {
     btn.textContent = '✓ 알림 켜짐'; btn.disabled = true; btn.classList.remove('btn-primary'); btn.classList.add('btn-outline');
-    st.innerHTML = '새 요청이 오면 <b>소리·진동·알림</b>으로 알려드립니다.';
+    if (pushOn) st.innerHTML = '✓ 웹푸시 구독됨 — 앱/화면을 꺼도 <b>잠금화면 알림</b>이 옵니다.';
+    else if (pushErr) st.innerHTML = '소리·진동·알림은 동작합니다. 웹푸시 구독은 실패: <span class="muted">' + pushErr + '</span>';
+    else st.innerHTML = '새 요청이 오면 <b>소리·진동·알림</b>으로 알려드립니다.';
   } else if (perm === 'denied') {
     st.innerHTML = '브라우저에서 알림이 차단되어 있습니다. 사이트 설정에서 알림을 허용해 주세요. (차단 시에도 소리·진동·화면 점멸은 동작)';
   }
@@ -63,6 +67,11 @@ async function enableNotif() {
   initAudio(); beep();           // 사용자 제스처로 오디오 활성화 + 테스트음
   if ('Notification' in window && Notification.permission !== 'granted') {
     try { await Notification.requestPermission(); } catch (e) {}
+  }
+  // 웹푸시 구독(2단계): 화면이 꺼지거나 앱을 닫아도 잠금화면 알림
+  if (window.PARKPUSH && Notification.permission === 'granted') {
+    try { await PARKPUSH.subscribe(token); pushOn = true; }
+    catch (e) { pushErr = e.message; }
   }
   notifReady = true;
   updateNotifUI();
