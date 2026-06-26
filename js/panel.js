@@ -2,8 +2,6 @@
 const $ = s => document.querySelector(s);
 const REVERT_MS = 20000; // 응답 표시 후 대기화면 복귀 시간
 
-$('#qrBox').innerHTML = PARKLINK.qrSVG(170);
-
 function render() {
   const r = PARKLINK.latestAnswered();
   if (r && (Date.now() - r.replyTs) < REVERT_MS) {
