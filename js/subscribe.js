@@ -1,22 +1,30 @@
 /* 구독 신청 / 차량 등록 */
 const $ = s => document.querySelector(s);
 
-$('#submitBtn').addEventListener('click', function () {
+$('#submitBtn').addEventListener('click', async function () {
   const name = $('#vName').value.trim() || '내 차량';
   const phone = $('#vPhone').value.trim();
   const months = parseInt($('#vMonths').value, 10);
   if (!phone) { alert('차주 전화번호를 입력하세요.'); return; }
   if (!months || months < 1) { alert('구독 개월 수를 1 이상 입력하세요.'); return; }
 
-  const v = PARKLINK.createVehicle({ name, ownerPhone: phone, months });
-  showResult(v);
+  const btn = $('#submitBtn');
+  btn.disabled = true; btn.textContent = '발급 중…';
+  try {
+    const v = await PARKLINK.createVehicle({ name, ownerPhone: phone, months });
+    showResult(v);
+  } catch (e) {
+    alert('구독 생성 실패: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '구독 신청하고 QR 발급';
+  }
 });
 
 function showResult(v) {
   $('#form').style.display = 'none';
   $('#result').style.display = 'block';
 
-  const s = PARKLINK.vehicleStatus(v.token);
+  const s = PARKLINK.statusOf(v);
   $('#resultInfo').innerHTML = `
     <dt>차량</dt><dd>${v.name}</dd>
     <dt>차주 번호</dt><dd>${v.ownerPhone}</dd>
@@ -25,7 +33,6 @@ function showResult(v) {
     <dt>시작일</dt><dd>${PARKLINK.fmtDate(v.startAt)}</dd>
     <dt>만료일</dt><dd>${PARKLINK.fmtDate(v.expireAt)} (D-${s.daysLeft})</dd>`;
 
-  // QR: sender URL(토큰 포함) 인코딩
   const url = PARKLINK.senderUrl(v.token);
   $('#qrBox').innerHTML = PARKLINK.qrSvg(url, 5);
   $('#dlBtn').setAttribute('href', PARKLINK.qrDataUrl(url, 8));

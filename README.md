@@ -31,3 +31,9 @@ css/style.css · js/qrcode.min.js · js/*.js
 
 ## 배포
 GitHub Pages: `kangsh8880/parklink` → https://kangsh8880.github.io/parklink/
+
+## 백엔드 (Supabase)
+- store 계층(`js/common.js`)이 Supabase REST(PostgREST)를 호출합니다. 기기 간 동기화 동작(휴대폰 스캔 OK).
+- 공개키(publishable)는 클라이언트 코드에 포함되는 공개값입니다. 접근 제어는 RLS 정책으로 합니다.
+- 현재 데모 정책은 개방형(`using true`)이며, 운영 시 RLS를 좁히고 050 안심중계 서버를 연동하면 됩니다.
+- 실시간성은 폴링(2~3초)으로 구현되어 있습니다(Supabase Realtime으로 교체 가능).
