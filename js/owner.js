@@ -121,18 +121,18 @@ function initAssistant() {
   if (!window.PARKASSIST) return;
   PARKASSIST.init({
     title: 'AI 음성 — 응답하기',
-    greet: '응답을 말씀하세요. 예를 들어, 3분 내 갈게요, 라고 말해보세요.',
+    greet: '응답을 말씀해 주세요. 예를 들어, 삼 분 안에 갈게요, 라고 하시면 돼요.',
     helpText: '이 화면은 차주가 받은 연락 요청에 응답하는 화면입니다.\n마이크(말하기) 버튼을 누르고 응답을 말하면 발신자에게 전송돼요.\n예) "3분 내 갈게요", "곧 갑니다", "양보 부탁해요", "바로 연락드릴게요".',
     interpret: async (t) => {
       const reply = PARKVOICE.matchReply(t, PARKLINK.REPLIES);
       if (!reply) return null;
       const reqs = await PARKLINK.listRequests(token);
       const pend = reqs.find(r => r.status === 'pending');
-      if (!pend) return { label: '응답할 요청 없음', confirm: '지금 응답할 새 요청이 없어요. 그래도 진행할까요?', run: async () => '응답할 새 요청이 없어요.' };
+      if (!pend) return { label: '응답할 요청 없음', confirm: '지금은 응답할 새 요청이 없어요. 그래도 진행할까요?', run: async () => '응답할 새 요청이 없어요.' };
       return {
         label: `“${reply}”로 응답`,
-        confirm: `${pend.reason} 요청에 '${reply}'로 응답할까요?`,
-        run: async () => { await PARKLINK.answerRequest(pend.id, reply); render(); return `'${reply}'로 응답했어요.`; },
+        confirm: `${pend.reason} 요청에, ${reply}. 이렇게 응답할까요?`,
+        run: async () => { await PARKLINK.answerRequest(pend.id, reply); render(); return `${reply}, 라고 응답했어요.`; },
       };
     },
   });

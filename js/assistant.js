@@ -24,8 +24,7 @@ window.PARKASSIST = (function () {
   }
 
   function greet() {
-    PARKVOICE.speak(cfg.greet || '무엇을 도와드릴까요? 말씀하세요.');
-    startListen();
+    PARKVOICE.speak(cfg.greet || '무엇을 도와드릴까요? 말씀해 주세요.', startListen);
   }
 
   function startListen() {
@@ -34,51 +33,51 @@ window.PARKASSIST = (function () {
     PARKVOICE.listen({
       onStart: () => status('🎙️ 듣고 있어요… 말씀하세요'),
       onResult: (t) => { heard(t); route(t); },
-      onError: (e) => status('인식 실패(' + e + ') — <b>말하기</b>를 다시 눌러주세요'),
+      onError: (e) => status('잘 안 들렸어요 — <b>말하기</b>를 다시 눌러주세요'),
     });
   }
 
   function confirmListen() {
     mode = 'confirm';
-    status('“네” 또는 “아니오”로 답해주세요 — 또는 아래 버튼');
+    status('🎙️ “네” 또는 “아니요”라고 답해주세요');
     PARKVOICE.listen({
-      onStart: () => status('🎙️ 확인 답변을 기다려요 (네/아니오)'),
+      onStart: () => status('🎙️ “네” 또는 “아니요”라고 답해주세요'),
       onResult: (t) => { heard(t); route(t); },
-      onError: () => status('확인을 못 들었어요 — 아래 <b>확인/취소</b> 버튼을 눌러주세요'),
+      onError: () => status('확인을 못 들었어요 — 아래 <b>확인 / 취소</b> 버튼을 눌러주세요'),
     });
   }
 
   async function route(t) {
     if (mode === 'confirm') {
-      if (PARKVOICE.isNo(t)) return cancelPending('취소했어요. 다시 하려면 말하기를 누르세요.');
+      if (PARKVOICE.isNo(t)) return cancelPending('알겠습니다. 취소할게요.');
       if (PARKVOICE.isYes(t)) return doRun();
-      PARKVOICE.speak(pending.label + ' 할까요? 네 또는 아니오로 답해주세요.', confirmListen);
+      PARKVOICE.speak('네 또는 아니요로 답해 주세요.', confirmListen);
       return;
     }
     if (PARKVOICE.isHelp(t)) { showHelp(); return; }
     let r = null;
     try { r = await cfg.interpret(t); } catch (e) { r = null; }
     if (!r) {
-      status('잘 못 알아들었어요. <b>말하기</b>로 다시 시도하거나 “사용법”이라고 말해보세요.');
-      PARKVOICE.speak('잘 못 알아들었어요. 다시 말씀해 주세요.');
+      status('잘 못 알아들었어요. 다시 말씀해 주세요.');
+      PARKVOICE.speak('잘 못 알아들었어요. 다시 한번 말씀해 주세요.', startListen);
       return;
     }
     pending = r;
     status('확인이 필요해요: <b>' + r.label + '</b>');
-    PARKVOICE.speak((r.confirm || (r.label + ' 할까요?')) + ' 네 또는 아니오로 답해주세요.', confirmListen);
+    PARKVOICE.speak((r.confirm || (r.label + ' 진행할까요?')), confirmListen);
   }
 
   async function doRun() {
     if (!pending) return;
     const p = pending; pending = null; mode = 'idle';
-    status('실행 중…');
+    status('처리하고 있어요…');
     try { const msg = await p.run(); status('✓ ' + (msg || '완료했어요')); PARKVOICE.speak(msg || '완료했어요.'); }
-    catch (e) { status('실패: ' + e.message); PARKVOICE.speak('실행에 실패했어요.'); }
+    catch (e) { status('실패: ' + e.message); PARKVOICE.speak('처리하지 못했어요. 다시 시도해 주세요.'); }
   }
 
   function cancelPending(msg) {
     pending = null; mode = 'idle';
-    status(msg); PARKVOICE.speak(msg);
+    status(msg + ' 다시 하시려면 말하기를 눌러주세요.'); PARKVOICE.speak(msg);
   }
 
   function showHelp() {

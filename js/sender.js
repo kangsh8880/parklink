@@ -34,7 +34,7 @@ function initAssistant() {
   if (!window.PARKASSIST) return;
   PARKASSIST.init({
     title: 'AI 음성 — 연락하기',
-    greet: '어떤 일로 연락할지 말씀하세요. 예를 들어 차 빼주세요, 라고 말해보세요.',
+    greet: '어떤 일로 연락할지 말씀해 주세요. 예를 들어, 차 좀 빼 주세요, 라고 하시면 돼요.',
     helpText: '이 화면은 주차된 차량의 차주에게 연락하는 화면입니다.\n마이크(말하기) 버튼을 누르고 상황을 말하면 차주에게 전달돼요.\n예) "차 좀 빼주세요", "문콕 났어요", "견인될 것 같아요", "라이트가 켜져 있어요".',
     interpret: async (t) => {
       const key = PARKVOICE.matchReason(t);
@@ -42,8 +42,8 @@ function initAssistant() {
       const r = PARKLINK.REASONS.find(x => x.key === key);
       return {
         label: r.label,
-        confirm: `'${r.label}'로 차주에게 전달할까요?`,
-        run: async () => { await send(key); return `${r.label} — 차주에게 전달했어요.`; },
+        confirm: `${r.label}. 이 내용으로 차주에게 보낼까요?`,
+        run: async () => { await send(key); return `${r.label}, 차주에게 전달했어요.`; },
       };
     },
   });

@@ -15,32 +15,39 @@ window.PARKVOICE = (function () {
 
   function speak(text, onEnd) {
     try {
-      if (synth.speaking) synth.cancel();
+      if (synth.speaking || synth.pending) synth.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ko-KR'; u.rate = 1.0; u.pitch = 1.0;
-      if (onEnd) u.onend = onEnd;
+      u.lang = 'ko-KR'; u.rate = 1.0; u.pitch = 1.05;
+      let done = false;
+      const finish = () => { if (done) return; done = true; if (onEnd) onEnd(); };
+      u.onend = finish;
+      u.onerror = finish;
       synth.speak(u);
+      // 일부 브라우저(안드로이드 등)는 onend가 안 울리므로 길이 기반 폴백
+      const ms = Math.min(9000, 900 + text.length * 95);
+      setTimeout(finish, ms);
     } catch (e) { if (onEnd) onEnd(); }
   }
   function stopSpeak() { try { synth.cancel(); } catch (e) {} }
 
-  // 한 번 듣기 → 인식 텍스트 콜백
-  function listen({ onResult, onError, onStart, onEnd }) {
+  // 한 번 듣기 → 인식 텍스트 콜백 (TTS와 겹치지 않게 시작 전 음성 중지 + 약간 지연)
+  function listen(opts) {
+    const onResult = opts.onResult, onError = opts.onError, onStart = opts.onStart, onEnd = opts.onEnd;
     if (!supported()) { if (onError) onError('이 브라우저는 음성인식을 지원하지 않습니다.'); return; }
+    try { synth.cancel(); } catch (e) {}
     if (listening) stop();
-    recog = new SR();
-    recog.lang = 'ko-KR';
-    recog.interimResults = false;
-    recog.maxAlternatives = 1;
-    recog.continuous = false;
-    recog.onstart = () => { listening = true; if (onStart) onStart(); };
-    recog.onerror = (e) => { listening = false; if (onError) onError(e.error || '인식 오류'); };
-    recog.onend = () => { listening = false; if (onEnd) onEnd(); };
-    recog.onresult = (e) => {
-      const txt = e.results[0][0].transcript.trim();
-      if (onResult) onResult(txt);
-    };
-    try { recog.start(); } catch (e) { if (onError) onError('인식 시작 실패'); }
+    setTimeout(function () {
+      recog = new SR();
+      recog.lang = 'ko-KR';
+      recog.interimResults = false;
+      recog.maxAlternatives = 1;
+      recog.continuous = false;
+      recog.onstart = () => { listening = true; if (onStart) onStart(); };
+      recog.onerror = (e) => { listening = false; if (onError) onError(e.error || '인식 오류'); };
+      recog.onend = () => { listening = false; if (onEnd) onEnd(); };
+      recog.onresult = (e) => { const txt = e.results[0][0].transcript.trim(); if (onResult) onResult(txt); };
+      try { recog.start(); } catch (e) { if (onError) onError('인식 시작 실패'); }
+    }, 250);
   }
   function stop() { try { if (recog) recog.stop(); } catch (e) {} listening = false; }
   function isListening() { return listening; }
