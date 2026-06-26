@@ -190,11 +190,21 @@ table.admin td,table.admin th{font-size:12.5px;padding:8px 7px;vertical-align:mi
 
 /* ===== AI 음성 어시스턴트 ===== */
 #pa-fab{position:fixed;right:18px;bottom:18px;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
-  width:62px;height:62px;border-radius:50%;border:none;cursor:pointer;
-  background:var(--navy);color:#fff;box-shadow:0 6px 18px rgba(54,92,137,.4)}
-#pa-fab .ai{font-size:17px;font-weight:800;line-height:1}
-#pa-fab .lbl{font-size:10px;opacity:.85}
+  width:62px;height:62px;border-radius:50%;border:none;cursor:pointer;color:#fff;
+  background:linear-gradient(135deg,#4a7ab5,var(--navy));
+  box-shadow:0 6px 18px rgba(54,92,137,.45);
+  animation:paFloat 3s ease-in-out infinite}
+#pa-fab::before,#pa-fab::after{content:"";position:absolute;inset:0;border-radius:50%;
+  border:2px solid rgba(74,122,181,.55);pointer-events:none;animation:paRing 2.4s ease-out infinite}
+#pa-fab::after{animation-delay:1.2s}
+#pa-fab:hover{transform:translateY(-2px) scale(1.05)}
+#pa-fab .ai{font-size:17px;font-weight:800;line-height:1;animation:paGlow 2s ease-in-out infinite}
+#pa-fab .lbl{font-size:10px;opacity:.9}
 #pa-fab.hide{display:none}
+@keyframes paFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes paRing{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.8);opacity:0}}
+@keyframes paGlow{0%,100%{text-shadow:0 0 0 rgba(255,255,255,0)}50%{text-shadow:0 0 10px rgba(255,255,255,.9)}}
+@media(prefers-reduced-motion:reduce){#pa-fab,#pa-fab::before,#pa-fab::after,#pa-fab .ai{animation:none}}
 #pa-panel{position:fixed;right:18px;bottom:18px;z-index:9999;width:min(340px,calc(100vw - 36px));
   background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.18);
   padding:14px;display:none}

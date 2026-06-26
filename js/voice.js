@@ -39,8 +39,9 @@ window.PARKVOICE = (function () {
       u.onend = finish;
       u.onerror = finish;
       synth.speak(u);
-      // 일부 브라우저(안드로이드 등)는 onend가 안 울리므로 길이 기반 폴백
-      const ms = Math.min(9000, 900 + text.length * 95);
+      // 일부 브라우저(안드로이드 등)는 onend가 안 울리므로 길이 기반 폴백.
+      // 한국어 발화 속도를 고려해 넉넉히 추정(말이 끝까지 읽힌 뒤 듣기 시작되도록).
+      const ms = Math.min(15000, 1600 + text.length * 160);
       setTimeout(finish, ms);
     } catch (e) { if (onEnd) onEnd(); }
   }

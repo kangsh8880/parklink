@@ -19,7 +19,7 @@ window.PARKASSIST = (function () {
   function close() {
     $('pa-panel').classList.remove('open');
     $('pa-fab').classList.remove('hide');
-    PARKVOICE.stop(); PARKVOICE.stopSpeak(); mode = 'idle'; pending = null; heard('');
+    PARKVOICE.stop(); PARKVOICE.stopSpeak(); mode = 'idle'; pending = null; confirmRetry = 0; heard('');
     status('버튼을 눌러 말씀하세요.');
   }
 
@@ -77,10 +77,17 @@ window.PARKASSIST = (function () {
 
   async function doRun() {
     if (!pending) return;
-    const p = pending; pending = null; mode = 'idle';
+    const p = pending; pending = null; mode = 'idle'; confirmRetry = 0;
     status('처리하고 있어요…');
-    try { const msg = await p.run(); status('✓ ' + (msg || '완료했어요')); PARKVOICE.speak(msg || '완료했어요.'); }
-    catch (e) { status('실패: ' + e.message); PARKVOICE.speak('처리하지 못했어요. 다시 시도해 주세요.'); }
+    try {
+      const msg = await p.run();
+      status('✓ ' + (msg || '완료했어요'));
+      // 완료 안내를 끝까지 말한 뒤 패널 자동 닫힘
+      PARKVOICE.speak(msg || '완료했어요.', () => { setTimeout(close, 1400); });
+    } catch (e) {
+      status('실패: ' + e.message);
+      PARKVOICE.speak('처리하지 못했어요. 다시 시도해 주세요.');
+    }
   }
 
   function cancelPending(msg) {
