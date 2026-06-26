@@ -28,13 +28,19 @@ window.PARKPUSH = (function () {
       sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8(VAPID_PUBLIC) });
     }
     const j = sub.toJSON();
-    // endpoint 기준 upsert (중복 구독 방지)
+    // 같은 브라우저의 이전 endpoint가 남아 있으면 정리(중복 누적 방지)
+    const prev = localStorage.getItem('parklink:pushEp');
+    if (prev && prev !== j.endpoint) {
+      try { await fetch(SUPA_URL + '/rest/v1/push_subs?endpoint=eq.' + encodeURIComponent(prev), { method: 'DELETE', headers: H }); } catch (e) {}
+    }
+    // endpoint 기준 upsert
     const res = await fetch(SUPA_URL + '/rest/v1/push_subs?on_conflict=endpoint', {
       method: 'POST',
       headers: Object.assign({}, H, { Prefer: 'resolution=merge-duplicates,return=minimal' }),
       body: JSON.stringify({ endpoint: j.endpoint, token: token, p256dh: j.keys.p256dh, auth: j.keys.auth, created_at: Date.now() }),
     });
     if (!res.ok) throw new Error('구독 저장 실패: ' + res.status + ' ' + (await res.text()));
+    localStorage.setItem('parklink:pushEp', j.endpoint);
     return true;
   }
 
