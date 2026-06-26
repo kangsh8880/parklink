@@ -37,18 +37,26 @@ window.PARKASSIST = (function () {
     });
   }
 
+  let confirmRetry = 0;
   function confirmListen() {
     mode = 'confirm';
-    status('🎙️ “네” 또는 “아니요”라고 답해주세요');
-    PARKVOICE.listen({
-      onStart: () => status('🎙️ “네” 또는 “아니요”라고 답해주세요'),
-      onResult: (t) => { heard(t); route(t); },
-      onError: () => status('확인을 못 들었어요 — 아래 <b>확인 / 취소</b> 버튼을 눌러주세요'),
-    });
+    status('🎙️ <b>삐</b> 소리 후 “네” 또는 “아니요” 라고 말해주세요');
+    PARKVOICE.cue();
+    setTimeout(function () {
+      PARKVOICE.listen({
+        onStart: () => status('🎙️ 듣고 있어요 — “네” 또는 “아니요”'),
+        onResult: (t) => { heard(t); route(t); },
+        onError: () => {
+          if (confirmRetry < 2) { confirmRetry++; status('못 들었어요. 한 번 더 — <b>삐</b> 소리 후 “네/아니요”'); confirmListen(); }
+          else { status('확인을 못 들었어요. 아래 <b>확인 / 취소</b> 버튼을 눌러주세요.'); }
+        },
+      });
+    }, 180);
   }
 
   async function route(t) {
     if (mode === 'confirm') {
+      confirmRetry = 0;
       if (PARKVOICE.isNo(t)) return cancelPending('알겠습니다. 취소할게요.');
       if (PARKVOICE.isYes(t)) return doRun();
       PARKVOICE.speak('네 또는 아니요로 답해 주세요.', confirmListen);
@@ -62,7 +70,7 @@ window.PARKASSIST = (function () {
       PARKVOICE.speak('잘 못 알아들었어요. 다시 한번 말씀해 주세요.', startListen);
       return;
     }
-    pending = r;
+    pending = r; confirmRetry = 0;
     status('확인이 필요해요: <b>' + r.label + '</b>');
     PARKVOICE.speak((r.confirm || (r.label + ' 진행할까요?')), confirmListen);
   }

@@ -13,6 +13,22 @@ window.PARKVOICE = (function () {
 
   function supported() { return !!SR; }
 
+  // 듣기 시작 직전 짧은 신호음(준비됐으니 말하라는 큐)
+  let _ac = null;
+  function cue() {
+    try {
+      _ac = _ac || new (window.AudioContext || window.webkitAudioContext)();
+      if (_ac.state === 'suspended') _ac.resume();
+      const o = _ac.createOscillator(), g = _ac.createGain();
+      o.type = 'sine'; o.frequency.value = 1046;
+      g.gain.setValueAtTime(0.0001, _ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.18, _ac.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, _ac.currentTime + 0.13);
+      o.connect(g); g.connect(_ac.destination);
+      o.start(); o.stop(_ac.currentTime + 0.14);
+    } catch (e) {}
+  }
+
   function speak(text, onEnd) {
     try {
       if (synth.speaking || synth.pending) synth.cancel();
@@ -56,8 +72,21 @@ window.PARKVOICE = (function () {
   function norm(s) { return (s || '').replace(/\s+/g, ' ').trim(); }
   function hasAny(t, arr) { return arr.some(k => t.indexOf(k) !== -1); }
   function isHelp(t) { return hasAny(t, ['사용법', '사용 방법', '어떻게', '도움말', '설명', '뭐 할 수', '뭘 할 수', '안내']); }
-  function isYes(t) { return hasAny(t, ['네', '예', '응', '맞아', '맞습니다', '확인', '좋아', '그래', '전송', '보내', '등록', '진행', '오케이', 'ok', '예스']); }
-  function isNo(t) { return hasAny(t, ['아니', '취소', '안돼', '다시', '노', '말고', '그만']); }
+  function _clean(t) { return norm(t).replace(/[.!?,\s]/g, ''); }
+  function isYes(t) {
+    const c = _clean(t);
+    // 전체가 짧은 긍정(오인식 변형 포함)
+    if (/^(네+|넹|넵+|예+|옙|응+|어어?|음|내|내네|네이|예스|맞아|맞아요|맞습니다|확인|확인해|좋아|좋아요|그래|그래요|오케이|오케|ok|진행|전송|보내|보내줘|등록|등록해|해줘|부탁해|고고|좋습니다)$/.test(c)) return true;
+    // 명확한 긍정으로 시작
+    if (/^(네|예|응|맞아|맞습니다|확인|좋아|그래|오케이|진행|전송|등록|보내|해줘)/.test(c)) return true;
+    return false;
+  }
+  function isNo(t) {
+    const c = _clean(t);
+    if (/^(아니+|아뇨|아니요|아니오|아니에요|아니예요|아니야|노|싫어|싫어요|취소|취소해|그만|안돼|안돼요|말고|다시)$/.test(c)) return true;
+    if (/^(아니|아뇨|취소|그만|안돼|싫)/.test(c)) return true;
+    return false;
+  }
 
   // 발신자: 사유 매칭 → reason key
   function matchReason(t) {
@@ -109,5 +138,5 @@ window.PARKVOICE = (function () {
     return { name, phone, months };
   }
 
-  return { supported, speak, stopSpeak, listen, stop, isListening, norm, isHelp, isYes, isNo, matchReason, matchReply, parseVehicle };
+  return { supported, cue, speak, stopSpeak, listen, stop, isListening, norm, isHelp, isYes, isNo, matchReason, matchReply, parseVehicle };
 })();
