@@ -1,5 +1,6 @@
 /* 발신자 화면 */
 let myReqId = null;
+let myReason = '';
 
 const $ = s => document.querySelector(s);
 
@@ -16,19 +17,33 @@ function renderReasons() {
   });
 }
 
+function setContactLinks(req) {
+  const phone = PARKLINK.getOwnerPhone();
+  const digits = PARKLINK.telDigits(phone);
+  const body = `[PARKLINK] ${req.reason} — 주차 차량 연락드립니다 (${req.location})`;
+  $('#callBtn').setAttribute('href', 'tel:' + digits);
+  $('#smsBtn').setAttribute('href', 'sms:' + digits + '?body=' + encodeURIComponent(body));
+  $('#privNote').innerHTML =
+    `테스트 모드: 차주 번호(<b>${phone}</b>)로 직접 연결됩니다.<br>실제 서비스에서는 050 안심번호로 비공개 중계됩니다.`;
+}
+
 function send(key) {
   myReqId = PARKLINK.sendRequest(key);
   const r = PARKLINK.getRequest(myReqId);
+  myReason = r.reason;
   $('#step-select').style.display = 'none';
   $('#step-sent').style.display = 'block';
   $('#sentInfo').textContent = `${r.reason} · ${r.location} · ${PARKLINK.fmtTime(r.ts)}`;
+  setContactLinks(r);
   refresh();
 }
 
 function refresh() {
   if (!myReqId) return;
   const r = PARKLINK.getRequest(myReqId);
-  if (r && r.status === 'answered') {
+  if (!r) return;
+  setContactLinks(r);              // 차주가 번호를 바꿔도 즉시 반영
+  if (r.status === 'answered') {
     $('#waitingCard').style.display = 'none';
     $('#answerCard').style.display = 'block';
     $('#answerMsg').textContent = r.reply;
@@ -42,10 +57,6 @@ $('#againBtn').addEventListener('click', () => {
   $('#answerCard').style.display = 'none';
   $('#waitingCard').style.display = 'block';
   $('#step-select').style.display = 'block';
-});
-
-$('#callBtn').addEventListener('click', () => {
-  alert('데모: 실제 서비스에서는 050 안심번호로 연결되어 양측 번호가 비공개로 통화됩니다.');
 });
 
 // 대기 점 애니메이션

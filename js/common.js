@@ -16,7 +16,10 @@ window.PARKLINK = (function () {
 
   const LOCATIONS = ['지하 2층 · B구역', '지상 주차장 · 3열', '노상 · 12번 칸', '아파트 동측 주차면'];
 
-  function _default() { return { requests: [], shocks: [], seq: 1 }; }
+  // 차주 휴대폰 번호 기본값 (테스트용) — 발신자의 통화·문자가 이 번호로 연결됨
+  const DEFAULT_OWNER_PHONE = '010-4411-3606';
+
+  function _default() { return { requests: [], shocks: [], seq: 1, ownerPhone: DEFAULT_OWNER_PHONE }; }
 
   function load() {
     try { return JSON.parse(localStorage.getItem(KEY)) || _default(); }
@@ -75,6 +78,11 @@ window.PARKLINK = (function () {
 
   function reset() { localStorage.removeItem(KEY); window.dispatchEvent(new CustomEvent('parklink:local')); }
 
+  // ---- 차주 번호 ----
+  function getOwnerPhone() { const st = load(); return st.ownerPhone || DEFAULT_OWNER_PHONE; }
+  function setOwnerPhone(num) { const st = load(); st.ownerPhone = num; save(st); }
+  function telDigits(num) { return String(num || '').replace(/[^0-9+]/g, ''); }
+
   // ---- 유틸 ----
   function fmtTime(ts) {
     const d = new Date(ts);
@@ -113,8 +121,9 @@ window.PARKLINK = (function () {
   }
 
   return {
-    REASONS, REPLIES, load, onUpdate,
+    REASONS, REPLIES, DEFAULT_OWNER_PHONE, load, onUpdate,
     sendRequest, answerRequest, logShock, latestAnswered, getRequest, reset,
+    getOwnerPhone, setOwnerPhone, telDigits,
     fmtTime, timeAgo, urgencyBadge, qrSVG,
   };
 })();

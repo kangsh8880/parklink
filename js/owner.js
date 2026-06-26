@@ -1,6 +1,18 @@
 /* 차주 화면 */
 const $ = s => document.querySelector(s);
 
+// 차주 번호 설정
+const phoneInput = $('#phoneInput');
+phoneInput.value = PARKLINK.getOwnerPhone();
+$('#savePhone').addEventListener('click', () => {
+  const v = phoneInput.value.trim();
+  if (!v) { return; }
+  PARKLINK.setOwnerPhone(v);
+  const note = $('#phoneNote');
+  note.innerHTML = `✓ 저장됨 — 발신자 통화·문자가 <b>${v}</b> 로 연결됩니다.`;
+  note.style.color = 'var(--blue)';
+});
+
 function replyButtons(id) {
   return `<div class="replies">` +
     PARKLINK.REPLIES.map((m, i) =>

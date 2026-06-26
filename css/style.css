@@ -124,6 +124,12 @@ tr:nth-child(even) td{background:var(--ice)}
 .eink .footer{margin-top:16px;text-align:center;font-size:11px;color:#9AA6B5}
 
 .muted{color:var(--gray);font-size:12px}
+
+/* 입력창 */
+input[type=text],input[type=tel]{font-family:inherit;font-size:15px;padding:11px 12px;
+  border:1.5px solid var(--line);border-radius:10px;width:100%;color:var(--ink);background:#fff}
+input[type=text]:focus,input[type=tel]:focus{outline:none;border-color:var(--blue)}
+.row .grow{flex:1}
 .center{text-align:center}
 .mt8{margin-top:8px}.mt16{margin-top:16px}.mb8{margin-bottom:8px}
 hr{border:none;border-top:1px solid var(--line);margin:14px 0}
