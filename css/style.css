@@ -178,3 +178,12 @@ table.admin td,table.admin th{font-size:12.5px;padding:8px 7px;vertical-align:mi
 @keyframes plFlash{0%,100%{opacity:0}50%{opacity:.22}}
 .req.fresh{animation:plPulse 1.6s ease 2}
 @keyframes plPulse{0%,100%{box-shadow:0 0 0 0 rgba(54,92,137,0)}50%{box-shadow:0 0 0 4px rgba(54,92,137,.18)}}
+
+/* ===== 알림 토글 스위치 ===== */
+.switch{position:relative;display:inline-block;width:48px;height:28px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--line);border-radius:28px;transition:.2s}
+.slider:before{content:"";position:absolute;height:22px;width:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked + .slider{background:var(--blue)}
+.switch input:checked + .slider:before{transform:translateX(20px)}
+.switch input:disabled + .slider{opacity:.5;cursor:default}

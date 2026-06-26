@@ -1,27 +1,24 @@
-/* 차주 화면 — 토큰(차량) 기반, Supabase 연동 + 요청 알림(1단계) */
+/* 차주 화면 — Supabase 연동 + 요청 알림(기본 ON, 토글로 끄기/켜기) */
 const $ = s => document.querySelector(s);
 const token = PARKLINK.tokenFromUrl();
+const OFF_KEY = 'parklink:notifOff:' + token;   // 사용자가 끈 상태 기억
 let busy = false;
 let phoneInit = false;
 
 /* ---------- 알림 상태 ---------- */
-let seenIds = null;       // 이미 본 요청 id 집합(null=초기화 전)
+let seenIds = null;
 let audioCtx = null;
-let notifReady = false;   // 알림 권한 + 오디오 활성화 여부
-let pushOn = false;       // 웹푸시 구독 완료
+let alertsEnabled = true;   // 알림 on/off (기본 on)
+let pushOn = false;
 let pushErr = null;
 let vehicleName = '차량';
 
 function initAudio() {
-  try {
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-  } catch (e) {}
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {}
 }
 function beep() {
   if (!audioCtx) return;
-  const seq = [0, 0.18, 0.36];
-  seq.forEach(t => {
+  [0, 0.18, 0.36].forEach(t => {
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.type = 'sine'; o.frequency.value = 880;
     g.gain.setValueAtTime(0.0001, audioCtx.currentTime + t);
@@ -31,49 +28,52 @@ function beep() {
     o.start(audioCtx.currentTime + t); o.stop(audioCtx.currentTime + t + 0.16);
   });
 }
-function flash() {
-  const el = $('#flashOverlay');
-  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
-}
+function flash() { const el = $('#flashOverlay'); el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); }
 function vibrate() { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
 
 function notifyNew(req) {
+  if (!alertsEnabled) return;
   beep(); flash(); vibrate();
   if ('Notification' in window && Notification.permission === 'granted') {
     try {
-      const n = new Notification('PARKLINK · ' + vehicleName, {
-        body: `${req.reason} (${req.urgency}) · ${req.location}`,
-        tag: 'parklink-' + req.id, renotify: true,
-      });
+      const n = new Notification('PARKLINK · ' + vehicleName, { body: `${req.reason} (${req.urgency}) · ${req.location}`, tag: 'parklink-' + req.id, renotify: true });
       n.onclick = () => { window.focus(); n.close(); };
     } catch (e) {}
   }
 }
 
 function updateNotifUI() {
+  const st = $('#notifStatus');
   const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
-  const btn = $('#notifBtn'), st = $('#notifStatus');
-  if (perm === 'granted' && notifReady) {
-    btn.textContent = '✓ 알림 켜짐'; btn.disabled = true; btn.classList.remove('btn-primary'); btn.classList.add('btn-outline');
-    if (pushOn) st.innerHTML = '✓ 웹푸시 구독됨 — 앱/화면을 꺼도 <b>잠금화면 알림</b>이 옵니다.';
-    else if (pushErr) st.innerHTML = '소리·진동·알림은 동작합니다. 웹푸시 구독은 실패: <span class="muted">' + pushErr + '</span>';
-    else st.innerHTML = '새 요청이 오면 <b>소리·진동·알림</b>으로 알려드립니다.';
-  } else if (perm === 'denied') {
-    st.innerHTML = '브라우저에서 알림이 차단되어 있습니다. 사이트 설정에서 알림을 허용해 주세요. (차단 시에도 소리·진동·화면 점멸은 동작)';
-  }
+  if (!alertsEnabled) { st.innerHTML = '알림이 <b>꺼져</b> 있습니다. 켜려면 토글을 올리세요.'; return; }
+  if (perm === 'denied') { st.innerHTML = '브라우저에서 알림이 차단됨 — 사이트 설정에서 허용해 주세요. (소리·진동·점멸은 동작)'; return; }
+  if (perm !== 'granted') { st.innerHTML = '알림 권한이 필요합니다. 토글을 한 번 더 누르거나 화면을 터치하면 허용 창이 뜹니다.'; return; }
+  if (pushOn) st.innerHTML = '✓ 켜짐 — 앱/화면을 꺼도 <b>잠금화면 알림</b>이 옵니다.';
+  else if (pushErr) st.innerHTML = '소리·진동·알림은 동작합니다. 웹푸시 구독 실패: <span class="muted">' + pushErr + '</span>';
+  else st.innerHTML = '✓ 켜짐 — 새 요청 시 소리·진동·알림으로 알려드립니다.';
 }
 
-async function enableNotif() {
-  initAudio(); beep();           // 사용자 제스처로 오디오 활성화 + 테스트음
-  if ('Notification' in window && Notification.permission !== 'granted') {
+// 알림 켜기: 권한 + 웹푸시 구독
+async function enableAlerts(viaGesture) {
+  alertsEnabled = true;
+  localStorage.removeItem(OFF_KEY);
+  if (viaGesture) { initAudio(); beep(); }
+  if ('Notification' in window && Notification.permission === 'default') {
     try { await Notification.requestPermission(); } catch (e) {}
   }
-  // 웹푸시 구독(2단계): 화면이 꺼지거나 앱을 닫아도 잠금화면 알림
   if (window.PARKPUSH && Notification.permission === 'granted') {
-    try { await PARKPUSH.subscribe(token); pushOn = true; }
+    try { await PARKPUSH.subscribe(token); pushOn = true; pushErr = null; }
     catch (e) { pushErr = e.message; }
   }
-  notifReady = true;
+  updateNotifUI();
+}
+
+// 알림 끄기: 웹푸시 구독 해제 + 상태 기억
+async function disableAlerts() {
+  alertsEnabled = false;
+  pushOn = false;
+  localStorage.setItem(OFF_KEY, '1');
+  if (window.PARKPUSH) { try { await PARKPUSH.unsubscribe(); } catch (e) {} }
   updateNotifUI();
 }
 
@@ -86,12 +86,32 @@ async function boot() {
   $('#valid').style.display = 'block';
   vehicleName = v.name;
 
-  $('#notifBtn').addEventListener('click', enableNotif);
+  const toggle = $('#notifToggle');
+  const userOff = localStorage.getItem(OFF_KEY) === '1';
+  alertsEnabled = !userOff;
+  toggle.checked = !userOff;
+
+  toggle.addEventListener('change', async () => {
+    if (toggle.checked) await enableAlerts(true);
+    else await disableAlerts();
+  });
+
+  // 첫 사용자 제스처 시 오디오 활성화 + (권한 미허용이면) 재시도
+  document.addEventListener('click', function onceGesture() {
+    if (!alertsEnabled) return;
+    initAudio();
+    if ('Notification' in window && Notification.permission === 'default') enableAlerts(true);
+  }, { once: true });
+
   $('#savePhone').addEventListener('click', async () => {
     const val = $('#phoneInput').value.trim();
     if (val) { try { await PARKLINK.setOwnerPhone(token, val); render(); } catch (e) { alert('저장 실패: ' + e.message); } }
   });
-  updateNotifUI();
+
+  // 기본 ON: 자동으로 알림 활성화 시도(권한이 이미 허용돼 있으면 조용히 구독)
+  if (alertsEnabled) await enableAlerts(false);
+  else updateNotifUI();
+
   render();
   setInterval(render, 2000);
 }
@@ -129,17 +149,10 @@ async function render() {
 
     const reqs = await PARKLINK.listRequests(token);
 
-    // ---- 신규 미응답 요청 감지 → 알림 ----
     const pendingIds = reqs.filter(r => r.status === 'pending').map(r => r.id);
     let freshIds = [];
-    if (seenIds === null) {
-      seenIds = new Set(reqs.map(r => r.id));   // 초기 로드: 알림 없이 기준만 저장
-    } else {
-      reqs.forEach(r => {
-        if (r.status === 'pending' && !seenIds.has(r.id)) { freshIds.push(r.id); notifyNew(r); }
-        seenIds.add(r.id);
-      });
-    }
+    if (seenIds === null) { seenIds = new Set(reqs.map(r => r.id)); }
+    else { reqs.forEach(r => { if (r.status === 'pending' && !seenIds.has(r.id)) { freshIds.push(r.id); notifyNew(r); } seenIds.add(r.id); }); }
 
     const list = $('#reqList');
     if (!reqs.length) { list.innerHTML = ''; $('#empty').style.display = 'block'; }

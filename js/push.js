@@ -45,5 +45,17 @@ window.PARKPUSH = (function () {
     } catch (e) { console.error('notify 실패', e); }
   }
 
-  return { supported, subscribe, notify };
+  // 구독 해제: 푸시 구독 취소 + Supabase에서 제거
+  async function unsubscribe() {
+    if (!('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return;
+    const ep = sub.endpoint;
+    try { await sub.unsubscribe(); } catch (e) {}
+    try { await fetch(SUPA_URL + '/rest/v1/push_subs?endpoint=eq.' + encodeURIComponent(ep), { method: 'DELETE', headers: H }); } catch (e) {}
+  }
+
+  return { supported, subscribe, notify, unsubscribe };
 })();
