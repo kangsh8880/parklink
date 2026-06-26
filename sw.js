@@ -8,10 +8,11 @@ self.addEventListener('push', event => {
   const title = data.title || 'PARKLINK';
   const options = {
     body: data.body || '새 연락 요청이 도착했습니다',
-    vibrate: [200, 100, 200],
+    vibrate: [300, 150, 300, 150, 300],
     tag: data.tag || 'parklink',
     renotify: true,
     requireInteraction: true,
+    silent: false,
     data: { url: data.url || '/' },
   };
   event.waitUntil(self.registration.showNotification(title, options));
