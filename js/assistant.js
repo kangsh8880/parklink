@@ -13,13 +13,21 @@ window.PARKASSIST = (function () {
   function open() {
     $('pa-panel').classList.add('open');
     $('pa-fab').classList.add('hide');
+    // 항상 초기 화면으로 시작
+    $('pa-help').style.display = 'none';
+    $('pa-help').textContent = '';
+    heard('');
+    pending = null; mode = 'idle'; confirmRetry = 0;
     if (!PARKVOICE.supported()) { status('이 브라우저는 음성인식을 지원하지 않습니다. <b>Chrome</b>에서 사용해 주세요.'); return; }
+    status('잠시만요…');
     greet();
   }
   function close() {
     $('pa-panel').classList.remove('open');
     $('pa-fab').classList.remove('hide');
     PARKVOICE.stop(); PARKVOICE.stopSpeak(); mode = 'idle'; pending = null; confirmRetry = 0; heard('');
+    $('pa-help').style.display = 'none';
+    $('pa-help').textContent = '';
     status('버튼을 눌러 말씀하세요.');
   }
 
@@ -96,10 +104,13 @@ window.PARKASSIST = (function () {
   }
 
   function showHelp() {
+    mode = 'idle'; pending = null; confirmRetry = 0;
+    PARKVOICE.stop();
     status('📖 사용법 안내');
     $('pa-help').style.display = 'block';
     $('pa-help').textContent = cfg.helpText;
-    PARKVOICE.speak(cfg.helpSpeak || cfg.helpText);
+    // 안내를 끝까지 말한 뒤 패널 자동 닫힘
+    PARKVOICE.speak(cfg.helpSpeak || cfg.helpText, () => { setTimeout(close, 1600); });
   }
 
   function init(config) {
