@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PARKLINK</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#365C89">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  html,body{height:100%;margin:0;font-family:'Noto Sans KR',system-ui,sans-serif;background:#f4f8fc;color:#365C89}
+  .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+  .logo{font-weight:800;font-size:26px;letter-spacing:.5px}
+  .msg{color:#6b7280;font-size:14px}
+  a.btn{margin-top:8px;display:inline-block;padding:12px 18px;background:#365C89;color:#fff;border-radius:10px;text-decoration:none;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">PARKLINK</div>
+  <div class="msg" id="msg">차주 화면으로 이동 중…</div>
+  <a class="btn" id="manual" href="index.html" style="display:none">허브로 이동</a>
+</div>
+<script>
+(function () {
+  var token = null;
+  try { token = localStorage.getItem('parklink:lastOwnerToken'); } catch (e) {}
+  // URL에 ?v= 가 직접 오면 우선 사용
+  var p = new URLSearchParams(location.search);
+  if (p.get('v')) token = p.get('v');
+  if (token) {
+    location.replace('owner.html?v=' + encodeURIComponent(token));
+  } else {
+    document.getElementById('msg').textContent = '등록된 차주 정보가 없습니다. 발급받은 차주 링크(QR)로 먼저 한 번 접속해 주세요.';
+    document.getElementById('manual').style.display = 'inline-block';
+  }
+})();
+</script>
+</body>
+</html>

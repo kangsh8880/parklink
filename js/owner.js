@@ -85,6 +85,7 @@ async function boot() {
   if (!token || !v) { $('#invalid').style.display = 'block'; return; }
   $('#valid').style.display = 'block';
   vehicleName = v.name;
+  try { localStorage.setItem('parklink:lastOwnerToken', token); } catch (e) {}
 
   const toggle = $('#notifToggle');
   const userOff = localStorage.getItem(OFF_KEY) === '1';

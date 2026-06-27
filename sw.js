@@ -2,6 +2,9 @@
 self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 
+// PWA 설치(installable) 조건 충족용 fetch 핸들러 (네트워크 그대로 통과)
+self.addEventListener('fetch', () => {});
+
 self.addEventListener('push', event => {
   let data = {};
   try { data = event.data.json(); } catch (e) { data = { title: 'PARKLINK', body: event.data ? event.data.text() : '' }; }
