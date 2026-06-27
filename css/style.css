@@ -226,3 +226,8 @@ table.admin td,table.admin th{font-size:12.5px;padding:8px 7px;vertical-align:mi
   transition:opacity .25s ease, transform .25s ease;white-space:nowrap;max-width:90vw}
 .pk-toast.err{background:#c0392b}
 .pk-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+
+/* ===== 관리자 차주번호 인라인 편집 ===== */
+.phone-edit{width:128px;max-width:128px;padding:6px 8px;font-size:13px;border:1px solid var(--line);border-radius:8px;color:var(--ink);background:#fff}
+.phone-edit:focus{outline:none;border-color:var(--navy)}
+.btn-xs{padding:6px 10px;font-size:12px;margin-left:4px;width:auto}

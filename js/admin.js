@@ -3,7 +3,11 @@ const $ = s => document.querySelector(s);
 let busy = false;
 
 async function render() {
-  if (busy) return; busy = true;
+  if (busy) return;
+  // 차주번호 편집 중에는 폴링 갱신을 보류(입력값 보존)
+  const ae = document.activeElement;
+  if (ae && ae.classList && ae.classList.contains('phone-edit')) return;
+  busy = true;
   try {
     const vs = await PARKLINK.listVehicles();
     let nA = 0, nR = 0, nE = 0;
@@ -39,7 +43,10 @@ async function render() {
         const s = PARKLINK.statusOf(v);
         return `<tr>
           <td><b>${v.name}</b><br><span class="muted">${PARKLINK.subMonths(v)}개월 구독</span></td>
-          <td>${v.ownerPhone}</td>
+          <td>
+            <input class="phone-edit" data-phone="${v.token}" value="${v.ownerPhone}" inputmode="tel" />
+            <button class="btn btn-outline btn-xs" data-act="savephone" data-token="${v.token}">변경</button>
+          </td>
           <td><span class="tokenpill">${v.token}</span></td>
           <td>${PARKLINK.fmtDate(v.startAt)}</td>
           <td>${PARKLINK.fmtDate(v.expireAt)}</td>
@@ -64,6 +71,15 @@ async function render() {
 async function action(act, token) {
   try {
     if (act === 'extend1') await PARKLINK.extendVehicle(token, 1);
+    else if (act === 'savephone') {
+      const inp = document.querySelector(`input.phone-edit[data-phone="${token}"]`);
+      const val = inp ? inp.value.trim() : '';
+      if (!val) { showAdminToast('전화번호를 입력해 주세요.', true); return; }
+      await PARKLINK.setOwnerPhone(token, val);
+      showAdminToast('✓ 차주 전화번호가 변경되었습니다.');
+      render();
+      return;
+    }
     else if (act === 'extend12') await PARKLINK.extendVehicle(token, 12);
     else if (act === 'exp10') await PARKLINK.setExpireInDays(token, 10);
     else if (act === 'exp0') await PARKLINK.setExpireInDays(token, 0);
@@ -95,6 +111,15 @@ $('#resetBtn').addEventListener('click', async () => {
   if (!confirm('데모 데이터를 모두 비울까요?')) return;
   try { await PARKLINK.reset(); render(); } catch (e) { alert('실패: ' + e.message); }
 });
+
+function showAdminToast(msg, isError) {
+  let t = document.getElementById('pkToast');
+  if (!t) { t = document.createElement('div'); t.id = 'pkToast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.className = 'pk-toast' + (isError ? ' err' : '') + ' show';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.className = 'pk-toast' + (isError ? ' err' : ''); }, 3000);
+}
 
 setInterval(render, 3000);
 render();
