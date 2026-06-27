@@ -44,10 +44,12 @@ window.PARKPUSH = (function () {
     return true;
   }
 
-  // 발신자 페이지에서 호출: 해당 차량 차주에게 푸시 발송 트리거
+  // 발신자 페이지에서 호출: 해당 차량 차주에게 푸시 발송 트리거 (경각심 위해 2회 알림)
   async function notify(token, title, body) {
+    const send = () => fetch(FN_URL, { method: 'POST', headers: H, body: JSON.stringify({ token, title, body }) }).catch(e => console.error('notify 실패', e));
     try {
-      await fetch(FN_URL, { method: 'POST', headers: H, body: JSON.stringify({ token, title, body }) });
+      await send();                          // 1차 알림
+      setTimeout(send, 1300);                // 약 1.3초 후 2차 알림(소리·진동 재알림)
     } catch (e) { console.error('notify 실패', e); }
   }
 

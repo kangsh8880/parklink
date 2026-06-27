@@ -11,7 +11,7 @@ self.addEventListener('push', event => {
   const title = data.title || 'PARKLINK';
   const options = {
     body: data.body || '새 연락 요청이 도착했습니다',
-    vibrate: [300, 150, 300, 150, 300],
+    vibrate: [400, 200, 400, 200, 400],
     tag: data.tag || 'parklink',
     renotify: true,
     requireInteraction: true,
