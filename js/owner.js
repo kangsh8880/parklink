@@ -192,7 +192,7 @@ async function render() {
 
     $('#subInfo').innerHTML = `
       <dt>토큰</dt><dd><span class="tokenpill">${v.token}</span></dd>
-      <dt>구독</dt><dd>${v.months}개월 · ${PARKLINK.statusBadge(s)}</dd>
+      <dt>구독</dt><dd>${PARKLINK.subMonths(v)}개월 · ${PARKLINK.statusBadge(s)}</dd>
       <dt>만료일</dt><dd>${PARKLINK.fmtDate(v.expireAt)} ${s.expired ? '(만료)' : '(D-' + s.daysLeft + ')'}</dd>`;
 
     const shocks = await PARKLINK.listShocks(token);

@@ -38,7 +38,7 @@ async function render() {
       tb.innerHTML = vs.map(v => {
         const s = PARKLINK.statusOf(v);
         return `<tr>
-          <td><b>${v.name}</b><br><span class="muted">${v.months}개월 구독</span></td>
+          <td><b>${v.name}</b><br><span class="muted">${PARKLINK.subMonths(v)}개월 구독</span></td>
           <td>${v.ownerPhone}</td>
           <td><span class="tokenpill">${v.token}</span></td>
           <td>${PARKLINK.fmtDate(v.startAt)}</td>

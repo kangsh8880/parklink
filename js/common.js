@@ -103,6 +103,13 @@ window.PARKLINK = (function () {
     return { daysLeft, expired, renewDue, state: expired ? '만료' : (renewDue ? '만료임박' : '구독중') };
   }
 
+  // 시작일→만료일 기간을 개월수로 환산(만료일 변경과 항상 연동). 최소 1개월.
+  function subMonths(v) {
+    if (!v || !v.startAt || !v.expireAt) return (v && v.months) || 0;
+    const m = Math.round((v.expireAt - v.startAt) / (DAY * 30.44));
+    return Math.max(1, m);
+  }
+
   /* ---------------- 요청 / 응답 / 충격 ---------------- */
   async function sendRequest(token, reasonKey) {
     const r = REASONS.find(x => x.key === reasonKey);
@@ -165,7 +172,7 @@ window.PARKLINK = (function () {
   return {
     REASONS, REPLIES, RENEW_DAYS,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
-    setOwnerPhone, removeVehicle, markRenewNotified, statusOf,
+    setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,
     sendRequest, answerRequest, listRequests, getRequest, latestAnswered, logShock, listShocks, reset,
     senderUrl, panelUrl, ownerUrl, tokenFromUrl, qrSvg, qrDataUrl,
     telDigits, fmtDate, fmtTime, timeAgo, urgencyBadge, statusBadge,
