@@ -218,3 +218,11 @@ table.admin td,table.admin th{font-size:12.5px;padding:8px 7px;vertical-align:mi
 .pa-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .pa-btns .btn{width:auto;flex:0 0 auto;font-size:12.5px;padding:8px 12px}
 .pa-btns #pa-talk{flex:1 1 100%}
+
+/* ===== 토스트 메시지 ===== */
+.pk-toast{position:fixed;left:50%;top:24px;transform:translate(-50%,-16px);
+  background:#365C89;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);z-index:10000;opacity:0;pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;white-space:nowrap;max-width:90vw}
+.pk-toast.err{background:#c0392b}
+.pk-toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}

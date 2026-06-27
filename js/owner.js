@@ -115,7 +115,12 @@ async function boot() {
 
   $('#savePhone').addEventListener('click', async () => {
     const val = $('#phoneInput').value.trim();
-    if (val) { try { await PARKLINK.setOwnerPhone(token, val); render(); } catch (e) { alert('저장 실패: ' + e.message); } }
+    if (val) {
+      try { await PARKLINK.setOwnerPhone(token, val); render(); showToast('✓ 전화번호가 변경 완료되었습니다.'); }
+      catch (e) { showToast('저장 실패: ' + e.message, true); }
+    } else {
+      showToast('전화번호를 입력해 주세요.', true);
+    }
   });
 
   // 기본 ON: 자동으로 알림 활성화 시도(권한이 이미 허용돼 있으면 조용히 구독)
@@ -172,6 +177,20 @@ function setQuickHint(t) {
   e.dataset.acted = '1';
   clearTimeout(e._t);
   e._t = setTimeout(() => { delete e.dataset.acted; }, 3000);
+}
+
+// 화면 중앙 상단에 잠깐 떴다가 3초 후 사라지는 알림 메시지
+function showToast(msg, isError) {
+  let t = document.getElementById('pkToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'pkToast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.className = 'pk-toast' + (isError ? ' err' : '') + ' show';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.className = 'pk-toast' + (isError ? ' err' : ''); }, 3000);
 }
 
 async function render() {
