@@ -94,13 +94,15 @@ window.PARKASSIST = (function () {
       PARKVOICE.speak(msg || '완료했어요.', () => { setTimeout(close, 1400); });
     } catch (e) {
       status('실패: ' + e.message);
-      PARKVOICE.speak('처리하지 못했어요. 다시 시도해 주세요.');
+      PARKVOICE.speak('처리하지 못했어요. 다시 시도해 주세요.', () => { setTimeout(close, 1600); });
     }
   }
 
   function cancelPending(msg) {
-    pending = null; mode = 'idle';
-    status(msg + ' 다시 하시려면 말하기를 눌러주세요.'); PARKVOICE.speak(msg);
+    pending = null; mode = 'idle'; confirmRetry = 0;
+    status(msg);
+    // 취소 안내를 끝까지 말한 뒤 패널 자동 닫힘
+    PARKVOICE.speak(msg, () => { setTimeout(close, 1400); });
   }
 
   function showHelp() {
