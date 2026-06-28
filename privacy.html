@@ -12,7 +12,7 @@
 <body>
 <div class="topbar">
   <div><span class="brand">PARKLINK</span> <span class="sub">개인정보처리방침</span></div>
-  <a class="home" href="index.html">← 허브</a>
+  <a class="home" href="index.html">← 메인화면</a>
 </div>
 
 <div class="wrap-narrow">
@@ -90,8 +90,17 @@
 
   <div class="row mt8">
     <a class="btn btn-outline btn-sm" href="terms.html">이용약관 보기 →</a>
-    <a class="btn btn-ghost" href="index.html">허브로</a>
+    <a class="btn btn-ghost" href="index.html">메인화면</a>
+  </div>
+
+  <div id="confirmBar" class="row mt8" style="display:none">
+    <a id="confirmBtn" class="btn btn-primary" style="width:100%" href="subscribe.html?agree=privacy">확인함 — 신청 화면으로 돌아가기</a>
   </div>
 </div>
+<script>
+  if (new URLSearchParams(location.search).get('from') === 'subscribe') {
+    document.getElementById('confirmBar').style.display = 'flex';
+  }
+</script>
 </body>
 </html>
