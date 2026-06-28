@@ -55,6 +55,14 @@ function showApproved(s) {
   $('#lnkOwner').setAttribute('href', 'owner.html?v=' + token);
   $('#lnkPanel').setAttribute('href', 'panel.html?v=' + token);
   $('#lnkSender').setAttribute('href', 'sender.html?v=' + token);
+
+  // 홈 화면에 추가 안내
+  const openOwner = 'owner.html?v=' + token + '&addhome=1';
+  $('#a2hsOpenOwner').setAttribute('href', openOwner);
+  $('#a2hsSteps').innerHTML = PARKLINK.a2hsSteps();
+  $('#a2hsBtn').addEventListener('click', () => { $('#a2hsModal').style.display = 'flex'; });
+  $('#a2hsClose').addEventListener('click', () => { $('#a2hsModal').style.display = 'none'; });
+  $('#a2hsModal').addEventListener('click', (e) => { if (e.target.id === 'a2hsModal') $('#a2hsModal').style.display = 'none'; });
 }
 
 $('#refreshBtn').addEventListener('click', load);

@@ -219,6 +219,16 @@ window.PARKLINK = (function () {
   async function approveSubscription(id) { return await rpc('approve_subscription', { p_id: id }); }
   async function rejectSubscription(id, reason) { return await rpc('reject_subscription', { p_id: id, p_reason: reason || null }); }
 
+  // 홈 화면에 추가(A2HS) 플랫폼별 안내 단계
+  function a2hsSteps() {
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isAndroid = /Android/i.test(ua);
+    if (isIOS) return '<ol class="steps"><li>화면 하단의 <b>공유</b> 버튼(□↑)을 누르세요.</li><li>목록에서 <b>홈 화면에 추가</b>를 선택하세요.</li><li>오른쪽 위 <b>추가</b>를 누르면 완료됩니다.</li></ol>';
+    if (isAndroid) return '<ol class="steps"><li>오른쪽 위 <b>⋮ 메뉴</b>를 누르세요.</li><li><b>홈 화면에 추가</b>(또는 앱 설치)를 선택하세요.</li><li><b>추가</b>를 누르면 완료됩니다.</li></ol>';
+    return '<ol class="steps"><li>브라우저 주소창의 <b>설치</b> 아이콘 또는 메뉴를 여세요.</li><li><b>홈 화면에 추가 / 설치</b>를 선택하세요.</li></ol>';
+  }
+
   async function recordConsent(token) {
     try {
       const res = await fetch(REST + 'consents', {
@@ -296,7 +306,7 @@ window.PARKLINK = (function () {
   return {
     REASONS, REPLIES, RENEW_DAYS, DOC_PRIVACY_VER, DOC_TERMS_VER, recordConsent,
     logError, listErrorLogs, clearErrorLogs, liveRequests,
-    requestSubscription, getSubscriptionStatus, listSubscriptions, approveSubscription, rejectSubscription,
+    requestSubscription, getSubscriptionStatus, listSubscriptions, approveSubscription, rejectSubscription, a2hsSteps,
     setAuth, adminLogin, adminRestore, adminLogout, verifyAdminPin,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,

@@ -94,6 +94,16 @@ async function boot() {
   vehicleName = v.name;
   try { localStorage.setItem('parklink:lastOwnerToken', token); } catch (e) {}
 
+  // 홈 화면에 추가 안내 배너(상태조회 화면에서 진입한 경우)
+  if (new URLSearchParams(location.search).get('addhome') === '1') {
+    const banner = $('#addHomeBanner');
+    if (banner) {
+      $('#ahbSteps').innerHTML = PARKLINK.a2hsSteps();
+      banner.style.display = 'block';
+      const x = $('#ahbClose'); if (x) x.addEventListener('click', () => { banner.style.display = 'none'; });
+    }
+  }
+
   const toggle = $('#notifToggle');
   const userOff = localStorage.getItem(OFF_KEY) === '1';
   alertsEnabled = !userOff;

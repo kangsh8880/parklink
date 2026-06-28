@@ -43,6 +43,7 @@
       <h2>차량 전용 QR (E-ink 패널용)</h2>
       <div class="qrwrap" id="qrBox"></div>
       <p class="muted">스캔하면 이 차량 차주에게 안심 연결됩니다.</p>
+      <div class="print-tip">🖨️ 이 QR을 저장 후 프린트하여 차량에 놓으세요.</div>
       <div class="linkrow" style="justify-content:center"><a id="dlBtn" download>QR 이미지 저장</a></div>
     </div>
     <div class="card">
@@ -52,8 +53,21 @@
         <a id="lnkPanel" target="_blank">🖥️ 차량 패널</a>
         <a id="lnkSender" target="_blank">📷 발신자(스캔) 화면</a>
       </div>
+      <button class="btn btn-outline btn-sm mt8" id="a2hsBtn" style="width:100%">📱 차주 화면 홈 화면에 추가</button>
     </div>
   </div>
+
+  <!-- 홈 화면 추가 안내 모달 -->
+  <div id="a2hsModal" class="modal-overlay" style="display:none">
+    <div class="modal-box card">
+      <div class="row"><h2 style="margin:0">📱 홈 화면에 추가</h2><span class="spacer"></span>
+        <button class="btn btn-ghost btn-sm" id="a2hsClose">닫기</button></div>
+      <p class="muted">차주 화면을 휴대폰 홈에 추가하면 앱처럼 바로 열 수 있어요. 추가된 아이콘은 <b>차주 화면</b>으로 바로 연결됩니다.</p>
+      <div class="note"><span>1️⃣</span><span>아래 <b>차주 화면 열기</b>를 누르세요.</span></div>
+      <div class="note mt8"><span>2️⃣</span><span>열린 차주 화면에서 다음 순서로 추가하세요:</span></div>
+      <div id="a2hsSteps" class="mt8"></div>
+      <a id="a2hsOpenOwner" class="btn btn-primary mt8" style="width:100%">차주 화면 열기 →</a>
+    </div>
 
   <!-- 반려 -->
   <div id="rejected" class="card" style="display:none">
