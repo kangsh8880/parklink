@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARKLINK · E2E 자가검증</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<meta name="theme-color" content="#365C89">
+<style>
+  .test-wrap{max-width:860px;margin:0 auto;padding:0 16px 40px}
+  .test-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13.5px;background:var(--white);border:1px solid #E2E8F0;border-radius:12px;overflow:hidden}
+  .test-table th{background:var(--ice);color:var(--navy);text-align:left;padding:10px 12px;font-size:12.5px}
+  .test-table td{padding:9px 12px;border-top:1px solid #EDF1F6;vertical-align:top}
+  .test-table td.g{color:var(--blue);font-weight:700;white-space:nowrap}
+  .test-table td.nm{font-weight:600;color:var(--ink)}
+  .test-table td.got{color:#475569;font-size:12.5px;word-break:break-all}
+  .test-table td.rs{white-space:nowrap;font-weight:700}
+  .test-table tr.pass td.rs{color:#1E7A46}
+  .test-table tr.fail td.rs{color:var(--red)}
+  .test-table tr.fail{background:#FDEEEE}
+  .summary{margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .score{font-size:20px;font-weight:800}
+  .score.ok{color:#1E7A46}.score.ng{color:var(--red)}
+  .badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+  .badge.ok{background:#E3F3EA;color:#1E7A46}.badge.ng{background:#FBE3E3;color:var(--red)}
+  .opt-box{margin-top:18px;padding:13px 15px;background:var(--ice);border:1px solid #D3E2F1;border-radius:10px}
+  .opt-box h3{margin:0 0 6px;font-size:14px;color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div><span class="brand">PARKLINK</span> <span class="sub">E2E 자가검증</span></div>
+  <a class="home" href="index.html">← 허브</a>
+</div>
+
+<div class="test-wrap">
+  <h1>E2E 자가검증</h1>
+  <p class="lead">라이브 환경에서 핵심 흐름과 보안 가드를 자동 점검합니다. 코드 변경 후 실행해 회귀를 즉시 확인하세요.</p>
+
+  <button class="btn btn-primary" id="runBtn" style="max-width:260px">전체 테스트 실행</button>
+  <div class="summary" id="summary"><span class="muted">아직 실행하지 않았습니다.</span></div>
+
+  <table class="test-table">
+    <thead><tr><th>구분</th><th>테스트</th><th>기대</th><th>결과</th><th>판정</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="opt-box">
+    <h3>선택 테스트 — PIN 시도제한</h3>
+    <p class="muted" style="margin:0 0 10px">실행 시 관리자 PIN 게이트가 약 60초간 잠깁니다(자동 해제). 정기 점검에는 위 전체 테스트만으로 충분합니다.</p>
+    <button class="btn btn-outline btn-sm" id="pinBtn">PIN 레이트리밋 테스트</button>
+    <div id="pinResult" class="muted" style="margin-top:10px"></div>
+  </div>
+
+  <p class="muted mt16" style="font-size:12px">※ 테스트는 기존 테스트 차량(PL9TWUMP4·PL8F6TFRR)을 사용하며, 점검용 요청·동의 행이 일부 생성됩니다. 운영 전 admin에서 정리하세요.</p>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/test.js"></script>
+</body>
+</html>
