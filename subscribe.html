@@ -40,6 +40,15 @@
       <input id="vMonths" type="number" min="1" max="36" step="1" value="3">
       <div class="hint">원하는 개월 수를 입력하세요. 만료 2주 전부터 갱신 알림이 표시됩니다.</div>
     </div>
+
+    <div class="consent-box">
+      <label class="consent"><input type="checkbox" id="agreePrivacy">
+        <span>(필수) <a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다.</span></label>
+      <label class="consent"><input type="checkbox" id="agreeTerms">
+        <span>(필수) <a href="terms.html" target="_blank">이용약관</a>에 동의합니다.</span></label>
+      <div class="hint">차주 전화번호 등 개인정보 처리를 위해 동의가 필요합니다. 발신자의 전화번호는 수집하지 않습니다.</div>
+    </div>
+
     <button class="btn btn-primary" id="submitBtn">구독 신청하고 QR 발급</button>
   </div>
 
@@ -79,5 +88,9 @@
 <script src="js/qrcode.min.js"></script>
 <script src="js/common.js"></script>
 <script src="js/subscribe.js"></script>
+<footer class="site-footer">
+  <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a><br>
+  PARKLINK — 번호는 숨기고, 소통은 양방향으로
+</footer>
 </body>
 </html>

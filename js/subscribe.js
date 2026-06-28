@@ -7,11 +7,15 @@ $('#submitBtn').addEventListener('click', async function () {
   const months = parseInt($('#vMonths').value, 10);
   if (!phone) { alert('차주 전화번호를 입력하세요.'); return; }
   if (!months || months < 1) { alert('구독 개월 수를 1 이상 입력하세요.'); return; }
+  if (!$('#agreePrivacy').checked || !$('#agreeTerms').checked) {
+    alert('개인정보처리방침과 이용약관에 모두 동의해야 등록할 수 있습니다.'); return;
+  }
 
   const btn = $('#submitBtn');
   btn.disabled = true; btn.textContent = '발급 중…';
   try {
     const v = await PARKLINK.createVehicle({ name, ownerPhone: phone, months });
+    await PARKLINK.recordConsent(v.token);   // 동의 이력 DB 기록(버전·시각)
     showResult(v);
   } catch (e) {
     alert('구독 생성 실패: ' + e.message);

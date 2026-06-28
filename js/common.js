@@ -141,6 +141,22 @@ window.PARKLINK = (function () {
   }
 
   /* ---------------- 요청 / 응답 / 충격 ---------------- */
+  // ── 동의(개인정보처리방침·이용약관) 기록 ──
+  const DOC_PRIVACY_VER = '2026-06-28';
+  const DOC_TERMS_VER = '2026-06-28';
+  async function recordConsent(token) {
+    try {
+      await api('POST', 'consents', {
+        token: token || null,
+        doc_privacy_version: DOC_PRIVACY_VER,
+        doc_terms_version: DOC_TERMS_VER,
+        agreed_at: Date.now(),
+        user_agent: (navigator.userAgent || '').slice(0, 300),
+      });
+      return true;
+    } catch (e) { console.warn('동의 기록 실패:', e.message); return false; }
+  }
+
   async function sendRequest(token, reasonKey) {
     const r = REASONS.find(x => x.key === reasonKey);
     const id = uid();
@@ -201,7 +217,7 @@ window.PARKLINK = (function () {
   function statusBadge(s) { const c = s.state === '구독중' ? 'ok' : (s.state === '만료임박' ? 'urgent' : 'low'); return `<span class="badge ${c}">${s.state}</span>`; }
 
   return {
-    REASONS, REPLIES, RENEW_DAYS,
+    REASONS, REPLIES, RENEW_DAYS, DOC_PRIVACY_VER, DOC_TERMS_VER, recordConsent,
     setAuth, adminLogin, adminRestore, adminLogout, verifyAdminPin,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,
