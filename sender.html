@@ -44,6 +44,13 @@
         <h2>✓ 차주에게 전달되었습니다</h2>
         <p class="muted" id="sentInfo"></p>
       </div>
+
+      <!-- 대기 중 상단 고정 안내(회신 오면 숨김) -->
+      <div class="keep-banner" id="keepBanner">
+        <span class="blink">🔔</span>
+        <span>차주 회신을 기다리는 중 — <b>이 화면을 닫지 마세요.</b> 회신이 여기에 표시됩니다.</span>
+      </div>
+
       <div class="card" id="waitingCard">
         <div class="row"><div class="spacer"><b>차주 응답 대기 중…</b></div><span class="muted" id="waitDots">●</span></div>
         <p class="muted mt8">차주가 응답하면 이 화면과 차량 패널에 표시됩니다.</p>
@@ -53,10 +60,25 @@
         <p style="font-size:24px;font-weight:800;color:var(--blue)" id="answerMsg"></p>
         <p class="muted mt8" id="answerTime"></p>
       </div>
-      <a class="btn btn-primary mt8" id="callBtn" href="#">📞 차주에게 전화</a>
-      <a class="btn btn-outline mt8" id="smsBtn" href="#">✉️ 문자 보내기</a>
-      <p class="muted center mt8" id="privNote"></p>
+
+      <!-- 회신 수신 후(또는 지연 시) 노출되는 후속 조치 -->
+      <div id="actionBtns" style="display:none">
+        <a class="btn btn-primary mt8" id="callBtn" href="#">📞 차주에게 전화</a>
+        <a class="btn btn-outline mt8" id="smsBtn" href="#">✉️ 문자 보내기</a>
+        <p class="muted center mt8" id="privNote"></p>
+      </div>
+
       <button class="btn btn-ghost mt16" id="againBtn" style="width:100%">다시 연락하기</button>
+    </div>
+
+    <!-- 전송 직후 확인 모달 -->
+    <div class="so-overlay" id="keepOpenModal" style="display:none">
+      <div class="so-card">
+        <div class="ic">📌</div>
+        <h3>이 화면을 닫지 마세요</h3>
+        <p>차주의 회신이 <b>이 화면에 실시간으로</b> 표시됩니다.<br>화면을 닫거나 나가면 회신을 받을 수 없어요.<br>잠시만 기다려 주세요.</p>
+        <button class="btn btn-primary" id="keepOpenOk" style="width:100%">확인 — 회신을 기다릴게요</button>
+      </div>
     </div>
   </div>
 </div>

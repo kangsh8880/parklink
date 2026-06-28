@@ -75,10 +75,34 @@ async function send(key) {
     $('#step-select').style.display = 'none';
     $('#step-sent').style.display = 'block';
     $('#sentInfo').textContent = `${r.reason} · ${r.location} · ${PARKLINK.fmtTime(r.ts)}`;
+    // 대기 상태로 초기화
+    $('#waitingCard').style.display = 'block';
+    $('#answerCard').style.display = 'none';
+    $('#keepBanner').style.display = 'flex';
+    $('#actionBtns').style.display = 'none';
+    waitingSince = Date.now();
+    fallbackShown = false;
     setLinks(r);
+    armUnloadGuard();
+    // "이 화면을 닫지 마세요" 확인 모달 노출(확인을 눌러야 대기 진행)
+    $('#keepOpenModal').style.display = 'flex';
     // 차주에게 웹푸시 발송 트리거(잠금화면 알림)
     if (window.PARKPUSH) PARKPUSH.notify(token, 'PARKLINK · ' + vehicle.name, `${r.reason} (${r.urgency}) · ${r.location}`);
   } catch (e) { alert('전송 실패: ' + e.message); }
+}
+
+// 닫기 경고: 회신 대기 중에는 화면 이탈 시 브라우저 경고
+let unloadGuard = null, waitingSince = 0, fallbackShown = false;
+function armUnloadGuard() {
+  if (unloadGuard) return;
+  unloadGuard = (e) => { e.preventDefault(); e.returnValue = ''; return ''; };
+  window.addEventListener('beforeunload', unloadGuard);
+}
+function disarmUnloadGuard() {
+  if (unloadGuard) { window.removeEventListener('beforeunload', unloadGuard); unloadGuard = null; }
+}
+function replyArrived() {
+  try { if (navigator.vibrate) navigator.vibrate([200, 80, 200]); } catch (_) {}
 }
 
 async function refresh() {
@@ -91,15 +115,36 @@ async function refresh() {
     $('#answerCard').style.display = 'block';
     $('#answerMsg').textContent = r.reply;
     $('#answerTime').textContent = '응답 ' + PARKLINK.timeAgo(r.replyTs);
+    // 회신 도착 → 닫기 경고 해제, 조치 버튼 노출, 배너 정리, 진동 환기
+    if ($('#keepBanner').style.display !== 'none') replyArrived();
+    $('#keepBanner').style.display = 'none';
+    $('#actionBtns').style.display = 'block';
+    disarmUnloadGuard();
+  } else if (!fallbackShown && waitingSince && Date.now() - waitingSince > 60000) {
+    // 응답이 늦어지면(60초 경과) 직접 연락 폴백 노출
+    fallbackShown = true;
+    $('#actionBtns').style.display = 'block';
+    $('#keepBanner').innerHTML = '<span class="blink">🔔</span><span>아직 회신을 기다리는 중이에요. 급하면 아래로 <b>직접 연락</b>할 수 있어요.</span>';
   }
 }
 
 document.addEventListener('click', e => {
-  if (e.target && e.target.id === 'againBtn') {
+  if (!e.target) return;
+  // "확인 — 회신을 기다릴게요"
+  if (e.target.id === 'keepOpenOk') {
+    $('#keepOpenModal').style.display = 'none';
+    return;
+  }
+  if (e.target.id === 'againBtn') {
     myReqId = null;
+    disarmUnloadGuard();
+    waitingSince = 0; fallbackShown = false;
+    $('#keepOpenModal').style.display = 'none';
     $('#step-sent').style.display = 'none';
     $('#answerCard').style.display = 'none';
     $('#waitingCard').style.display = 'block';
+    $('#keepBanner').style.display = 'flex';
+    $('#actionBtns').style.display = 'none';
     $('#step-select').style.display = 'block';
   }
 });
