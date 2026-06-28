@@ -30,45 +30,53 @@
 
   <div id="valid" style="display:none">
     <h1 id="vehTitle">실시간 알림</h1>
-    <p class="lead">연락 요청에 정형 응답을 보내면, 차량 패널에 즉시 표시됩니다.</p>
+    <p class="lead owner-lead">응답을 보내면, 발신자에게 회신됩니다.</p>
 
-    <!-- 알림 설정 -->
-    <div class="card" id="notifCard">
+    <!-- 알림 설정: Off [토글] On -->
+    <div class="card owner-card" id="notifCard">
       <div class="row">
-        <div class="grow"><b>요청 알림</b><div class="muted" id="notifStatus">새 요청 시 소리·진동·알림으로 알려드립니다.</div></div>
+        <div class="grow"><b>알림 설정</b></div>
+        <span class="onoff" id="lblOff">Off</span>
         <label class="switch"><input type="checkbox" id="notifToggle" checked><span class="slider"></span></label>
+        <span class="onoff" id="lblOn">On</span>
       </div>
-      <div class="muted mt8">기본으로 <b>켜져</b> 있습니다. 끄려면 토글을 내리세요. 이 페이지를 <b>홈 화면에 추가</b>해두면 앱/화면을 꺼도 잠금화면 알림이 옵니다.</div>
+      <div class="muted" id="notifStatus" style="display:none"></div>
     </div>
 
     <!-- 구독/갱신 배너 -->
     <div id="subBanner"></div>
 
-    <!-- 구독 정보 -->
-    <div class="card tint">
-      <h2>내 구독 정보</h2>
-      <dl class="kv" id="subInfo"></dl>
+    <!-- 구독 정보 (재배열) -->
+    <div class="card tint owner-card" id="subCard">
+      <div class="subhead"><h2>구독 정보</h2><span class="subhead-token"><span class="sk">토큰</span> <span class="tokenpill" id="subToken"></span></span></div>
+      <div id="subInfo"></div>
       <div class="row mt8">
         <input id="phoneInput" class="grow" type="tel" inputmode="tel" placeholder="010-0000-0000">
         <button class="btn btn-sm btn-primary" id="savePhone">번호 저장</button>
       </div>
-      <p class="muted mt8">발신자의 통화·문자가 이 번호로 연결됩니다.</p>
+      <p class="muted sm mt8">발신자의 통화·문자가 이 번호로 연결됩니다.</p>
     </div>
 
     <div id="shockBox"></div>
 
-    <!-- 빠른 회신(상시): pending 요청에 수동으로 바로 응답 -->
-    <div class="card" id="quickReplyCard">
+    <!-- 빠른 회신 -->
+    <div class="card owner-card" id="quickReplyCard">
       <div class="row">
-        <div class="grow"><b>빠른 회신</b><div class="muted" id="quickReplyHint">새 요청이 오면 아래 버튼으로 바로 응답할 수 있어요.</div></div>
+        <div class="grow"><b>빠른 회신</b><div class="muted sm" id="quickReplyHint">새 요청이 오면 아래 버튼으로 바로 응답할 수 있어요.</div></div>
       </div>
       <div id="quickReplies" class="replies mt8"></div>
     </div>
 
-    <h2 class="mt16">연락 요청</h2>
+    <!-- 현재 요청 현황 (회신 대기 중인 pending만) -->
+    <h2 class="sec">현재 요청 현황</h2>
     <div id="reqList"></div>
-    <div id="empty" class="card flat center muted" style="display:none">
-      아직 받은 요청이 없습니다.<br><span style="font-size:12px">발신자 화면(QR 스캔)에서 사유를 전송해 보세요.</span>
+    <div id="empty" class="card flat center muted sm" style="display:none">지금 회신할 요청이 없습니다.</div>
+
+    <!-- 요청이력 조회 (초기 접힘, 클릭 시 펼침) -->
+    <button class="btn btn-outline full mt8" id="historyToggle">요청이력 조회 <span id="histArrow">▾</span></button>
+    <div id="historyWrap" style="display:none">
+      <div id="historyList" class="mt8"></div>
+      <div id="historyEmpty" class="card flat center muted sm" style="display:none">과거 요청 이력이 없습니다.</div>
     </div>
   </div>
 </div>

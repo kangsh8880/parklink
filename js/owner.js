@@ -42,8 +42,15 @@ function notifyNew(req) {
   }
 }
 
+function setOnOff() {
+  const on = $('#lblOn'), off = $('#lblOff');
+  if (on) on.style.color = alertsEnabled ? 'var(--blue)' : 'var(--gray)';
+  if (off) off.style.color = alertsEnabled ? 'var(--gray)' : 'var(--blue)';
+}
 function updateNotifUI() {
+  setOnOff();
   const st = $('#notifStatus');
+  if (!st) return;
   const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
   if (!alertsEnabled) { st.innerHTML = '알림이 <b>꺼져</b> 있습니다. 켜려면 토글을 올리세요.'; return; }
   if (perm === 'denied') { st.innerHTML = '브라우저에서 알림이 차단됨 — 사이트 설정에서 허용해 주세요. (소리·진동·점멸은 동작)'; return; }
@@ -123,9 +130,22 @@ async function boot() {
     }
   });
 
+  // 요청이력 조회: 초기 접힘, 클릭 시 펼침
+  const histBtn = $('#historyToggle');
+  if (histBtn) {
+    histBtn.addEventListener('click', () => {
+      const wrap = $('#historyWrap');
+      const open = wrap.style.display !== 'none';
+      wrap.style.display = open ? 'none' : 'block';
+      const arr = $('#histArrow'); if (arr) arr.textContent = open ? '▾' : '▴';
+      if (!open) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   // 기본 ON: 자동으로 알림 활성화 시도(권한이 이미 허용돼 있으면 조용히 구독)
   if (alertsEnabled) await enableAlerts(false);
   else updateNotifUI();
+  setOnOff();
 
   render();
   setInterval(render, 2000);
@@ -210,10 +230,12 @@ async function render() {
     else if (s.renewDue) bn.innerHTML = `<div class="banner renew"><span>🔔</span><span><b>구독 만료 D-${s.daysLeft}</b> — 곧 만료됩니다. 미리 갱신하세요. (만료 ${PARKLINK.RENEW_DAYS}일 전부터 알림)</span></div>`;
     else bn.innerHTML = '';
 
+    $('#subToken').textContent = v.token;
     $('#subInfo').innerHTML = `
-      <dt>토큰</dt><dd><span class="tokenpill">${v.token}</span></dd>
-      <dt>구독</dt><dd>${PARKLINK.subMonths(v)}개월 · ${PARKLINK.statusBadge(s)}</dd>
-      <dt>만료일</dt><dd>${PARKLINK.fmtDate(v.expireAt)} ${s.expired ? '(만료)' : '(D-' + s.daysLeft + ')'}</dd>`;
+      <div class="subgrid">
+        <div><span class="sk">구독</span>${PARKLINK.subMonths(v)}개월 · ${PARKLINK.statusBadge(s)}</div>
+        <div><span class="sk">만료일</span>${PARKLINK.fmtDate(v.expireAt)} ${s.expired ? '(만료)' : '(D-' + s.daysLeft + ')'}</div>
+      </div>`;
 
     const shocks = await PARKLINK.listShocks(token);
     $('#shockBox').innerHTML = shocks.length
@@ -232,18 +254,16 @@ async function render() {
     if (seenIds === null) { seenIds = new Set(reqs.map(r => r.id)); }
     else { reqs.forEach(r => { if (r.status === 'pending' && !seenIds.has(r.id)) { freshIds.push(r.id); notifyNew(r); } seenIds.add(r.id); }); }
 
+    const pending = reqs.filter(r => r.status !== 'answered');
+    const history = reqs.filter(r => r.status === 'answered');
+
+    // 현재 요청 현황: 회신 대기 중(pending)만, 인라인 회신 버튼 포함
     const list = $('#reqList');
-    if (!reqs.length) { list.innerHTML = ''; $('#empty').style.display = 'block'; }
+    if (!pending.length) { list.innerHTML = ''; $('#empty').style.display = 'block'; }
     else {
       $('#empty').style.display = 'none';
-      list.innerHTML = reqs.map(r => {
+      list.innerHTML = pending.map(r => {
         const fresh = freshIds.includes(r.id) ? ' fresh' : '';
-        if (r.status === 'answered') {
-          return `<div class="req answered">
-            <div class="head"><span class="title">${r.reason}</span>${PARKLINK.urgencyBadge(r.urgency)}</div>
-            <div class="meta">${r.location} · ${PARKLINK.fmtTime(r.ts)}</div>
-            <div class="answer">✓ 응답함: ${r.reply}</div></div>`;
-        }
         return `<div class="req${fresh}">
           <div class="head"><span class="title">${r.reason}</span>${PARKLINK.urgencyBadge(r.urgency)}</div>
           <div class="meta">${r.desc} · ${r.location} · ${PARKLINK.timeAgo(r.ts)}</div>
@@ -251,6 +271,17 @@ async function render() {
       }).join('');
       list.querySelectorAll('button[data-id]').forEach(b =>
         b.addEventListener('click', async () => { try { await PARKLINK.answerRequest(b.dataset.id, b.dataset.msg); render(); } catch (e) { alert('응답 실패: ' + e.message); } }));
+    }
+
+    // 요청이력: 응답 완료(answered) 기록 — 펼쳤을 때만 표시(읽기전용)
+    const hList = $('#historyList');
+    if (hList) {
+      hList.innerHTML = history.map(r => `<div class="req answered">
+        <div class="head"><span class="title">${r.reason}</span>${PARKLINK.urgencyBadge(r.urgency)}</div>
+        <div class="meta">${r.location} · ${PARKLINK.fmtTime(r.ts)}</div>
+        <div class="answer">✓ 응답함: ${r.reply}</div></div>`).join('');
+      const hEmpty = $('#historyEmpty');
+      if (hEmpty) hEmpty.style.display = history.length ? 'none' : 'block';
     }
   } catch (e) { console.error(e); }
   finally { busy = false; }
