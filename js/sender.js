@@ -62,7 +62,7 @@ function renderReasons() {
 
 function setLinks(req) {
   const digits = PARKLINK.telDigits(vehicle.ownerPhone);
-  const body = `[PARKLINK] ${req.reason} — 주차 차량 연락드립니다 (${req.location})`;
+  const body = `[PARKLINK] ${req.reason} — 주차 차량 연락드립니다`;
   $('#callBtn').setAttribute('href', 'tel:' + digits);
   $('#smsBtn').setAttribute('href', 'sms:' + digits + '?body=' + encodeURIComponent(body));
   $('#privNote').innerHTML = `테스트 모드: 차주 번호(<b>${vehicle.ownerPhone}</b>)로 직접 연결됩니다.<br>실제 서비스에서는 050 안심번호로 비공개 중계됩니다.`;
@@ -74,7 +74,7 @@ async function send(key) {
     const r = await PARKLINK.getRequest(myReqId);
     $('#step-select').style.display = 'none';
     $('#step-sent').style.display = 'block';
-    $('#sentInfo').textContent = `${r.reason} · ${r.location} · ${PARKLINK.fmtTime(r.ts)}`;
+    $('#sentInfo').textContent = `${r.reason} · ${PARKLINK.fmtTime(r.ts)}`;
     // 대기 상태로 초기화
     $('#waitingCard').style.display = 'block';
     $('#answerCard').style.display = 'none';
@@ -87,7 +87,7 @@ async function send(key) {
     // "이 화면을 닫지 마세요" 확인 모달 노출(확인을 눌러야 대기 진행)
     $('#keepOpenModal').style.display = 'flex';
     // 차주에게 웹푸시 발송 트리거(잠금화면 알림)
-    if (window.PARKPUSH) PARKPUSH.notify(token, 'PARKLINK · ' + vehicle.name, `${r.reason} (${r.urgency}) · ${r.location}`);
+    if (window.PARKPUSH) PARKPUSH.notify(token, 'PARKLINK · ' + vehicle.name, `${r.reason} (${r.urgency})`);
   } catch (e) {
     let m = '전송에 실패했어요. 잠시 후 다시 시도해 주세요.';
     if (/rate_limited/.test(e.message)) m = '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.';

@@ -36,7 +36,7 @@ function notifyNew(req) {
   beep(); flash(); vibrate();
   if ('Notification' in window && Notification.permission === 'granted') {
     try {
-      const n = new Notification('PARKLINK · ' + vehicleName, { body: `${req.reason} (${req.urgency}) · ${req.location}`, tag: 'parklink-' + req.id, renotify: true });
+      const n = new Notification('PARKLINK · ' + vehicleName, { body: `${req.reason} (${req.urgency})`, tag: 'parklink-' + req.id, renotify: true });
       n.onclick = () => { window.focus(); n.close(); };
     } catch (e) {}
   }
@@ -230,7 +230,7 @@ async function render() {
         const fresh = freshIds.includes(r.id) ? ' fresh' : '';
         return `<div class="req${fresh}">
           <div class="head"><span class="title">${r.reason}</span>${PARKLINK.urgencyBadge(r.urgency)}</div>
-          <div class="meta">${r.desc} · ${r.location} · ${PARKLINK.timeAgo(r.ts)}</div>
+          <div class="meta">${r.desc} · ${PARKLINK.timeAgo(r.ts)}</div>
           ${replyButtons(r.id)}</div>`;
       }).join('');
       list.querySelectorAll('button[data-id]').forEach(b =>
@@ -242,7 +242,7 @@ async function render() {
     if (hList) {
       hList.innerHTML = history.map(r => `<div class="req answered">
         <div class="head"><span class="title">${r.reason}</span>${PARKLINK.urgencyBadge(r.urgency)}</div>
-        <div class="meta">${r.location} · ${PARKLINK.fmtTime(r.ts)}</div>
+        <div class="meta">${PARKLINK.fmtTime(r.ts)}</div>
         <div class="answer">✓ 응답함: ${r.reply}</div></div>`).join('');
       const hEmpty = $('#historyEmpty');
       if (hEmpty) hEmpty.style.display = history.length ? 'none' : 'block';
