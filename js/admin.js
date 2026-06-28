@@ -42,17 +42,17 @@ async function render() {
       tb.innerHTML = vs.map(v => {
         const s = PARKLINK.statusOf(v);
         return `<tr>
-          <td><b>${v.name}</b><br><span class="muted">${PARKLINK.subMonths(v)}개월 구독</span></td>
-          <td>
+          <td data-label="차량"><b>${v.name}</b><br><span class="muted">${PARKLINK.subMonths(v)}개월 구독</span></td>
+          <td data-label="차주번호">
             <input class="phone-edit" data-phone="${v.token}" value="${v.ownerPhone}" inputmode="tel" />
             <button class="btn btn-outline btn-xs" data-act="savephone" data-token="${v.token}">변경</button>
           </td>
-          <td><span class="tokenpill">${v.token}</span></td>
-          <td>${PARKLINK.fmtDate(v.startAt)}</td>
-          <td>${PARKLINK.fmtDate(v.expireAt)}</td>
-          <td>${s.expired ? '—' : 'D-' + s.daysLeft}</td>
-          <td>${PARKLINK.statusBadge(s)}</td>
-          <td><div class="admin-actions right">
+          <td data-label="토큰"><span class="tokenpill">${v.token}</span></td>
+          <td data-label="시작">${PARKLINK.fmtDate(v.startAt)}</td>
+          <td data-label="만료">${PARKLINK.fmtDate(v.expireAt)}</td>
+          <td data-label="남은일">${s.expired ? '—' : 'D-' + s.daysLeft}</td>
+          <td data-label="상태">${PARKLINK.statusBadge(s)}</td>
+          <td data-label="관리"><div class="admin-actions right">
             <button class="btn btn-outline" data-act="qr" data-token="${v.token}">QR</button>
             <button class="btn btn-outline" data-act="extend1" data-token="${v.token}">+1개월</button>
             <button class="btn btn-outline" data-act="exp10" data-token="${v.token}">만료-10일</button>
