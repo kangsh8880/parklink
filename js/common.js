@@ -176,6 +176,34 @@ window.PARKLINK = (function () {
     });
   }
 
+  // ── 실시간 구독(Realtime) — 라이브러리/구독 실패 시 폴링으로 자동 폴백 ──
+  let _rtClient = null;
+  function _rt() {
+    if (_rtClient) return _rtClient;
+    try {
+      if (typeof window === 'undefined' || !window.supabase || !window.supabase.createClient) return null;
+      _rtClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { realtime: { params: { eventsPerSecond: 10 } } });
+      return _rtClient;
+    } catch (e) { return null; }
+  }
+  // 해당 토큰의 requests 변경(INSERT/UPDATE)을 실시간 수신. 폴백 시 pollMs 간격 폴링.
+  function liveRequests(token, onChange, pollMs) {
+    let pollTimer = null;
+    const safe = () => { try { onChange(); } catch (e) {} };
+    const startPoll = () => { if (!pollTimer) { safe(); pollTimer = setInterval(safe, pollMs || 3000); } };
+    const c = _rt();
+    if (!c) { startPoll(); return { mode: 'poll' }; }
+    try {
+      const ch = c.channel('req-' + token)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'requests', filter: 'token=eq.' + token }, safe)
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') safe();                                  // 구독 직후 1회 동기화
+          else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') startPoll(); // 폴백
+        });
+      return { mode: 'realtime', channel: ch };
+    } catch (e) { startPoll(); return { mode: 'poll' }; }
+  }
+
   async function recordConsent(token) {
     try {
       const res = await fetch(REST + 'consents', {
@@ -252,7 +280,7 @@ window.PARKLINK = (function () {
 
   return {
     REASONS, REPLIES, RENEW_DAYS, DOC_PRIVACY_VER, DOC_TERMS_VER, recordConsent,
-    logError, listErrorLogs, clearErrorLogs,
+    logError, listErrorLogs, clearErrorLogs, liveRequests,
     setAuth, adminLogin, adminRestore, adminLogout, verifyAdminPin,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,

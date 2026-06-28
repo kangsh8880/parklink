@@ -30,6 +30,6 @@ async function render() {
   finally { busy = false; }
 }
 
-setInterval(render, 2000);
+PARKLINK.liveRequests(token, render, 2500);  // 실시간 구독(폴백: 폴링)
 document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 render();
