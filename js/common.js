@@ -144,6 +144,38 @@ window.PARKLINK = (function () {
   // ── 동의(개인정보처리방침·이용약관) 기록 ──
   const DOC_PRIVACY_VER = '2026-06-28';
   const DOC_TERMS_VER = '2026-06-28';
+  // ── 에러 모니터링: 클라이언트 JS 에러를 Supabase에 적재 ──
+  const _errSeen = {}; let _errCount = 0; let _errBusy = false;
+  async function logError(msg, stack) {
+    try {
+      msg = String(msg || '').trim().slice(0, 500);
+      if (!msg || _errBusy) return false;
+      const now = Date.now();
+      if (_errCount >= 30) return false;                       // 세션당 상한
+      if (_errSeen[msg] && now - _errSeen[msg] < 60000) return false; // 동일 메시지 60초 1회
+      _errSeen[msg] = now; _errCount++; _errBusy = true;
+      await fetch(REST + 'error_logs', {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ msg, stack: String(stack || '').slice(0, 1500), page: location.pathname, ua: (navigator.userAgent || '').slice(0, 300), ts: now }),
+      });
+      _errBusy = false;
+      return true;
+    } catch (e) { _errBusy = false; return false; }
+  }
+  async function listErrorLogs(limit) { return await api('GET', 'error_logs?select=*&order=ts.desc&limit=' + (limit || 50)); }
+  async function clearErrorLogs() { return await api('DELETE', 'error_logs?id=gt.0'); }
+  // 전역 에러 후킹(중복 설치 방지)
+  if (typeof window !== 'undefined' && !window.__parklinkErrHook) {
+    window.__parklinkErrHook = true;
+    window.addEventListener('error', function (e) {
+      try { var m = e && e.message; if (m) logError(m, (e.error && e.error.stack) || ((e.filename || '') + ':' + (e.lineno || ''))); } catch (_) {}
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      try { var r = e && e.reason; logError('unhandledrejection: ' + (r && r.message ? r.message : String(r)), r && r.stack); } catch (_) {}
+    });
+  }
+
   async function recordConsent(token) {
     try {
       const res = await fetch(REST + 'consents', {
@@ -220,6 +252,7 @@ window.PARKLINK = (function () {
 
   return {
     REASONS, REPLIES, RENEW_DAYS, DOC_PRIVACY_VER, DOC_TERMS_VER, recordConsent,
+    logError, listErrorLogs, clearErrorLogs,
     setAuth, adminLogin, adminRestore, adminLogout, verifyAdminPin,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,

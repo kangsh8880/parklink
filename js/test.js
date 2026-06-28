@@ -31,6 +31,8 @@
       run: async () => { const r = await raw('GET', 'app_secrets?select=*'); return { pass: r.text.trim() === '[]', got: r.text.slice(0, 40) }; } },
     { g: '보안', name: 'consents 익명 조회 차단', expect: '빈 배열',
       run: async () => { const r = await raw('GET', 'consents?select=*&limit=1'); return { pass: r.text.trim() === '[]', got: r.text.slice(0, 40) }; } },
+    { g: '보안', name: 'error_logs 익명 조회 차단', expect: '빈 배열',
+      run: async () => { const r = await raw('GET', 'error_logs?select=*&limit=1'); return { pass: r.text.trim() === '[]', got: r.text.slice(0, 40) }; } },
     { g: '기능', name: 'get_vehicle RPC 단건 조회', expect: '차량 1건',
       run: async () => { const v = await PARKLINK.getVehicle(TEST_TOKEN); return { pass: !!(v && v.name), got: v ? v.name : '없음' }; } },
     { g: '기능', name: 'create_request 정상 생성', expect: 'id 반환',

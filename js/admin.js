@@ -130,6 +130,31 @@ function startAdmin() {
   setInterval(render, 3000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   render();
+  // 에러 로그
+  loadErrorLogs();
+  const er = document.getElementById('errRefresh');
+  const ec = document.getElementById('errClear');
+  if (er) er.addEventListener('click', loadErrorLogs);
+  if (ec) ec.addEventListener('click', async () => {
+    if (!confirm('에러 로그를 전체 삭제할까요?')) return;
+    try { await PARKLINK.clearErrorLogs(); loadErrorLogs(); } catch (e) { alert('삭제 실패: ' + e.message); }
+  });
+}
+function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+async function loadErrorLogs() {
+  const box = document.getElementById('errList'); if (!box) return;
+  try {
+    const rows = await PARKLINK.listErrorLogs(50);
+    if (!rows || !rows.length) { box.innerHTML = '<span class="muted">기록된 에러가 없습니다.</span>'; return; }
+    box.innerHTML = rows.map(r => `
+      <div class="errrow">
+        <div class="row"><b>${escHtml(r.msg)}</b><span class="spacer"></span><span class="muted">${PARKLINK.timeAgo(Number(r.ts))}</span></div>
+        <div class="meta muted">${escHtml(r.page || '')}${r.ua ? ' · ' + escHtml(String(r.ua).slice(0, 60)) : ''}</div>
+        ${r.stack ? `<pre class="errstack">${escHtml(String(r.stack).slice(0, 400))}</pre>` : ''}
+      </div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<span class="muted">불러오기 실패: ' + escHtml(e.message) + '</span>';
+  }
 }
 function gateErr(id, msg) { const e = document.getElementById(id); if (!e) return; e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
 function initGate() {
