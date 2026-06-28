@@ -281,3 +281,12 @@ h2.sec{margin:8px 0 8px}
 .errrow b{color:var(--red);font-size:13.5px;word-break:break-all}
 .errrow .meta{font-size:12px;margin-top:3px}
 .errstack{margin:8px 0 0;padding:8px 10px;background:#F5F7FA;border-radius:7px;font-size:11.5px;line-height:1.5;color:#475569;white-space:pre-wrap;word-break:break-all;max-height:140px;overflow:auto}
+
+/* ===== 구독 신청 관리 ===== */
+.subrow{padding:11px 13px;border:1px solid #EDF1F6;border-radius:9px;margin-bottom:9px;background:#FCFDFF}
+.subrow.pending{border-color:#D3E2F1;background:var(--ice)}
+.subrow .meta{font-size:12.5px;margin-top:4px}
+.sub-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;margin-left:6px}
+.sub-badge.ok{background:#E3F3EA;color:#1E7A46}
+.sub-badge.ng{background:#FBE3E3;color:var(--red)}
+.sub-badge.wait{background:#E5EEF8;color:var(--blue)}

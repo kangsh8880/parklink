@@ -204,6 +204,21 @@ window.PARKLINK = (function () {
     } catch (e) { startPoll(); return { mode: 'poll' }; }
   }
 
+  // ── 구독 신청·승인 워크플로 ──
+  async function requestSubscription({ name, ownerPhone, applicantName, memo, months }) {
+    return await rpc('request_subscription', {
+      p_name: name, p_owner_phone: ownerPhone,
+      p_applicant_name: applicantName || null, p_memo: memo || null, p_months: Number(months) || 3,
+    });
+  }
+  async function getSubscriptionStatus(id) {
+    const rows = await rpc('get_subscription_status', { p_id: id });
+    return rows && rows[0] ? rows[0] : null;
+  }
+  async function listSubscriptions(status) { return await rpc('list_subscriptions', { p_status: status || null }); }
+  async function approveSubscription(id) { return await rpc('approve_subscription', { p_id: id }); }
+  async function rejectSubscription(id, reason) { return await rpc('reject_subscription', { p_id: id, p_reason: reason || null }); }
+
   async function recordConsent(token) {
     try {
       const res = await fetch(REST + 'consents', {
@@ -281,6 +296,7 @@ window.PARKLINK = (function () {
   return {
     REASONS, REPLIES, RENEW_DAYS, DOC_PRIVACY_VER, DOC_TERMS_VER, recordConsent,
     logError, listErrorLogs, clearErrorLogs, liveRequests,
+    requestSubscription, getSubscriptionStatus, listSubscriptions, approveSubscription, rejectSubscription,
     setAuth, adminLogin, adminRestore, adminLogout, verifyAdminPin,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,

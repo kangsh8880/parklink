@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARKLINK · 신청 상태 조회</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<meta name="theme-color" content="#365C89">
+</head>
+<body>
+<div class="topbar">
+  <div><span class="brand">PARKLINK</span> <span class="sub">신청 상태 조회</span></div>
+  <a class="home" href="index.html">← 허브</a>
+</div>
+
+<div class="wrap-narrow">
+  <h1>구독 신청 상태</h1>
+
+  <div id="loading" class="card"><p class="muted">상태를 불러오는 중…</p></div>
+
+  <div id="notfound" class="notfound" style="display:none">
+    <h2>신청을 찾을 수 없습니다</h2>
+    <p class="muted">링크가 올바른지 확인하세요.</p>
+    <a class="btn btn-outline btn-sm mt8" href="subscribe.html">구독 신청하기</a>
+  </div>
+
+  <!-- 대기 -->
+  <div id="pending" class="card" style="display:none">
+    <h2>⏳ 승인 대기 중</h2>
+    <dl class="kv" id="pendInfo"></dl>
+    <p class="muted mt8">관리자 검토 후 승인되면 이 화면에서 QR이 발급됩니다. 이 페이지를 다시 열어 확인하세요.</p>
+  </div>
+
+  <!-- 승인됨 -->
+  <div id="approved" style="display:none">
+    <div class="card mint">
+      <h2>✓ 승인되었습니다</h2>
+      <dl class="kv" id="apprInfo"></dl>
+    </div>
+    <div class="card center">
+      <h2>차량 전용 QR (E-ink 패널용)</h2>
+      <div class="qrwrap" id="qrBox"></div>
+      <p class="muted">스캔하면 이 차량 차주에게 안심 연결됩니다.</p>
+      <div class="linkrow" style="justify-content:center"><a id="dlBtn" download>QR 이미지 저장</a></div>
+    </div>
+    <div class="card">
+      <h2>바로가기</h2>
+      <div class="linkrow">
+        <a id="lnkOwner">🔔 차주 화면</a>
+        <a id="lnkPanel" target="_blank">🖥️ 차량 패널</a>
+        <a id="lnkSender" target="_blank">📷 발신자(스캔) 화면</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 반려 -->
+  <div id="rejected" class="card" style="display:none">
+    <h2 style="color:var(--red)">✗ 반려되었습니다</h2>
+    <dl class="kv" id="rejInfo"></dl>
+    <a class="btn btn-outline btn-sm mt8" href="subscribe.html">다시 신청하기</a>
+  </div>
+
+  <div class="row mt8"><button class="btn btn-ghost btn-sm" id="refreshBtn">새로고침</button></div>
+</div>
+
+<footer class="site-footer">
+  <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a><br>
+  PARKLINK — 번호는 숨기고, 소통은 양방향으로
+</footer>
+
+<script src="js/qrcode.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/status.js"></script>
+</body>
+</html>

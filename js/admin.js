@@ -139,6 +139,10 @@ function startAdmin() {
     if (!confirm('에러 로그를 전체 삭제할까요?')) return;
     try { await PARKLINK.clearErrorLogs(); loadErrorLogs(); } catch (e) { alert('삭제 실패: ' + e.message); }
   });
+  // 구독 신청 관리
+  loadSubs();
+  const sr = document.getElementById('subsRefresh');
+  if (sr) sr.addEventListener('click', loadSubs);
 }
 function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 async function loadErrorLogs() {
@@ -195,3 +199,49 @@ function initGate() {
   document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
 }
 initGate();
+
+/* ---------- 구독 신청 관리 ---------- */
+function subBadge(s) {
+  return s === 'active' ? '<span class="sub-badge ok">승인</span>'
+    : s === 'rejected' ? '<span class="sub-badge ng">반려</span>'
+    : '<span class="sub-badge wait">대기</span>';
+}
+function subRow(r) {
+  const when = PARKLINK.timeAgo(Number(r.applied_at));
+  return `<div class="subrow ${r.status}">
+    <div class="row"><b>${escHtml(r.name)}</b> ${subBadge(r.status)}<span class="spacer"></span><span class="muted">${when}</span></div>
+    <div class="meta muted">${escHtml(r.owner_phone)} · ${r.months}개월${r.applicant_name ? ' · ' + escHtml(r.applicant_name) : ''}${r.memo ? ' · ' + escHtml(r.memo) : ''}</div>
+    ${r.status === 'active' && r.vehicle_token ? `<div class="meta">발급 토큰: <span class="tokenpill">${escHtml(r.vehicle_token)}</span></div>` : ''}
+    ${r.status === 'rejected' && r.reject_reason ? `<div class="meta muted">사유: ${escHtml(r.reject_reason)}</div>` : ''}
+    ${r.status === 'pending' ? `<div class="row mt8">
+        <button class="btn btn-primary btn-sm" data-appr="${r.id}">승인</button>
+        <button class="btn btn-outline btn-sm" data-rej="${r.id}">반려</button></div>` : ''}
+  </div>`;
+}
+async function loadSubs() {
+  const box = document.getElementById('subsList');
+  const cnt = document.getElementById('subsCount');
+  if (!box) return;
+  try {
+    const rows = await PARKLINK.listSubscriptions();
+    const pending = (rows || []).filter(r => r.status === 'pending');
+    if (cnt) cnt.textContent = '대기 ' + pending.length + '건';
+    if (!rows || !rows.length) { box.innerHTML = '<span class="muted">신청 내역이 없습니다.</span>'; return; }
+    box.innerHTML = rows.map(subRow).join('');
+    box.querySelectorAll('[data-appr]').forEach(b => b.addEventListener('click', () => approveSub(b.dataset.appr)));
+    box.querySelectorAll('[data-rej]').forEach(b => b.addEventListener('click', () => rejectSub(b.dataset.rej)));
+  } catch (e) {
+    box.innerHTML = '<span class="muted">불러오기 실패: ' + escHtml(e.message) + '</span>';
+  }
+}
+async function approveSub(id) {
+  if (!confirm('이 신청을 승인하고 차량을 발급할까요?')) return;
+  try { const token = await PARKLINK.approveSubscription(id); alert('승인 완료 · 발급 토큰: ' + token); loadSubs(); render(); }
+  catch (e) { alert('승인 실패: ' + e.message); }
+}
+async function rejectSub(id) {
+  const reason = prompt('반려 사유를 입력하세요(선택):', '');
+  if (reason === null) return;
+  try { await PARKLINK.rejectSubscription(id, reason); loadSubs(); }
+  catch (e) { alert('반려 실패: ' + e.message); }
+}
