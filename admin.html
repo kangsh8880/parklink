@@ -45,67 +45,101 @@
 
 <div class="wrap">
   <h1>가입자 관리</h1>
-  <p class="lead">차량 토큰↔차주 매핑과 구독 상태를 관리합니다. (서버 매핑 테이블 모사)</p>
 
-  <div class="stats">
-    <div class="stat"><b id="kTotal">0</b><span>총 가입</span></div>
-    <div class="stat"><b id="kActive">0</b><span>구독중</span></div>
-    <div class="stat"><b id="kRenew">0</b><span>만료 임박</span></div>
-    <div class="stat"><b id="kExpired">0</b><span>만료</span></div>
+  <!-- 탭 네비게이션 -->
+  <div class="tabnav" id="tabnav">
+    <button class="tabbtn active" data-tab="dashboard">가입자현황</button>
+    <button class="tabbtn" data-tab="subs">구독신청관리</button>
+    <button class="tabbtn" data-tab="list">가입자목록</button>
+    <button class="tabbtn" data-tab="errors">에러로그</button>
   </div>
 
-  <!-- 갱신 알림 -->
-  <div id="renewCard" class="card" style="display:none">
-    <h2>🔔 갱신 알림 대상 (만료 2주 전~만료)</h2>
-    <div id="renewList"></div>
-  </div>
-
-  <!-- 구독 신청 관리 -->
-  <div class="card mt16" id="subsCard">
-    <div class="row"><h2 style="margin:0">📋 구독 신청 관리</h2><span class="spacer"></span>
-      <span class="muted" id="subsCount"></span>
-      <button class="btn btn-ghost btn-sm" id="subsRefresh">새로고침</button></div>
-    <div id="subsList" class="mt8 muted">불러오는 중…</div>
-  </div>
-
-  <h2 class="mt16">가입자 목록</h2>
-  <div class="card flat" style="padding:0;overflow-x:auto">
-    <table class="admin" id="vtable">
-      <thead><tr>
-        <th>차량</th><th>차주번호</th><th>토큰</th><th>시작</th><th>만료</th>
-        <th>남은일</th><th>상태</th><th class="right">관리</th>
-      </tr></thead>
-      <tbody></tbody>
-    </table>
-    <div id="empty" class="notfound" style="display:none">
-      <div class="big">🗂️</div>등록된 차량이 없습니다.<br>
-      <a class="muted" href="subscribe.html">구독 신청에서 차량을 등록하세요 →</a>
+  <!-- 1) 가입자현황 -->
+  <section class="tabpanel" id="tab-dashboard">
+    <p class="lead">상태별 가입 현황입니다. 숫자를 누르면 해당 목록으로 이동합니다.</p>
+    <div class="stats">
+      <button class="stat" data-stat="all"><b id="kTotal">0</b><span>총 가입</span></button>
+      <button class="stat" data-stat="active"><b id="kActive">0</b><span>구독중</span></button>
+      <button class="stat" data-stat="renew"><b id="kRenew">0</b><span>만료 임박</span></button>
+      <button class="stat" data-stat="expired"><b id="kExpired">0</b><span>만료</span></button>
     </div>
-  </div>
+    <div id="renewCard" class="card mt16" style="display:none">
+      <h2>🔔 갱신 알림 대상 (만료 2주 전~만료)</h2>
+      <div id="renewList"></div>
+    </div>
+  </section>
 
-  <div class="note mt16"><span>🧪</span><span>테스트: 각 행의 <b>만료-10일</b>/<b>만료처리</b> 버튼으로 갱신 알림·만료 동작을 즉시 확인할 수 있습니다.</span></div>
+  <!-- 2) 구독신청관리 -->
+  <section class="tabpanel" id="tab-subs" style="display:none">
+    <div class="card" id="subsCard">
+      <div class="row"><h2 style="margin:0">📋 구독 신청 관리</h2><span class="spacer"></span>
+        <span class="muted" id="subsCount"></span>
+        <button class="btn btn-ghost btn-sm" id="subsRefresh">새로고침</button></div>
+      <div id="subsList" class="mt8 muted">불러오는 중…</div>
+    </div>
+  </section>
 
-  <div class="row mt8">
-    <a class="btn btn-outline btn-sm" href="subscribe.html">+ 차량 등록</a>
-    <span class="spacer"></span>
-    <button class="btn btn-ghost" id="resetBtn">전체 초기화</button>
-  </div>
+  <!-- 3) 가입자목록 -->
+  <section class="tabpanel" id="tab-list" style="display:none">
+    <div class="row" style="align-items:center">
+      <h2 style="margin:0">가입자 목록</h2><span class="spacer"></span>
+      <button class="btn btn-ghost btn-sm" id="backToDash">← 현황으로</button>
+    </div>
 
-  <!-- QR 모달 대용 영역 -->
-  <div id="qrPanel" class="card" style="display:none">
-    <div class="row"><h2 style="margin:0" id="qrTitle">QR</h2><span class="spacer"></span>
-      <button class="btn btn-ghost" id="qrClose">닫기</button></div>
-    <div class="qrwrap" id="qrBox"></div>
-    <div class="copybox"><span class="grow" id="qrUrl"></span></div>
-  </div>
+    <!-- 조회(검색) 영역 -->
+    <div class="card searchbar">
+      <div class="srow">
+        <select id="fStatus">
+          <option value="all">ALL (전체)</option>
+          <option value="active">구독중</option>
+          <option value="renew">만료 임박</option>
+          <option value="expired">만료</option>
+        </select>
+        <input id="fKeyword" type="text" placeholder="차량명 · 번호판 · 전화번호 검색" />
+        <button class="btn btn-primary btn-sm" id="fSearch">조회</button>
+      </div>
+      <div class="muted mt8" id="listCount"></div>
+    </div>
 
-  <!-- 에러 모니터링 -->
-  <div class="card mt16">
-    <div class="row"><h2 style="margin:0">⚠️ 에러 로그</h2><span class="spacer"></span>
-      <button class="btn btn-ghost btn-sm" id="errRefresh">새로고침</button>
-      <button class="btn btn-ghost btn-sm" id="errClear">전체 삭제</button></div>
-    <div id="errList" class="muted mt8">불러오는 중…</div>
-  </div>
+    <div class="card flat" style="padding:0;overflow-x:auto">
+      <table class="admin" id="vtable">
+        <thead><tr>
+          <th>차량</th><th>차주번호</th><th>토큰</th><th>시작</th><th>만료</th>
+          <th>남은일</th><th>상태</th><th class="right">관리</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="empty" class="notfound" style="display:none">
+        <div class="big">🗂️</div>조회된 가입자가 없습니다.
+      </div>
+    </div>
+
+    <div class="note mt16"><span>🧪</span><span>테스트: 각 행의 <b>만료-10일</b>/<b>만료처리</b> 버튼으로 갱신 알림·만료 동작을 즉시 확인할 수 있습니다.</span></div>
+
+    <div class="row mt8">
+      <a class="btn btn-outline btn-sm" href="subscribe.html">+ 차량 등록</a>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" id="resetBtn">전체 초기화</button>
+    </div>
+
+    <!-- QR 모달 대용 영역 -->
+    <div id="qrPanel" class="card mt16" style="display:none">
+      <div class="row"><h2 style="margin:0" id="qrTitle">QR</h2><span class="spacer"></span>
+        <button class="btn btn-ghost" id="qrClose">닫기</button></div>
+      <div class="qrwrap" id="qrBox"></div>
+      <div class="copybox"><span class="grow" id="qrUrl"></span></div>
+    </div>
+  </section>
+
+  <!-- 4) 에러로그 -->
+  <section class="tabpanel" id="tab-errors" style="display:none">
+    <div class="card">
+      <div class="row"><h2 style="margin:0">⚠️ 에러 로그</h2><span class="spacer"></span>
+        <button class="btn btn-ghost btn-sm" id="errRefresh">새로고침</button>
+        <button class="btn btn-ghost btn-sm" id="errClear">전체 삭제</button></div>
+      <div id="errList" class="muted mt8">불러오는 중…</div>
+    </div>
+  </section>
 </div>
 
 <script src="js/qrcode.min.js"></script>

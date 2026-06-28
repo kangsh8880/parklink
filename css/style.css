@@ -339,3 +339,29 @@ h2.sec{margin:8px 0 8px}
   /* 구독 신청/에러 로그 카드 내 버튼 줄바꿈 */
   .subrow .row .btn, #subsRefresh, #errRefresh, #errClear { white-space: nowrap; }
 }
+
+/* ===== 관리자 탭 네비게이션 ===== */
+.tabnav{display:flex;gap:6px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:5px;margin:14px 0 18px;overflow-x:auto}
+.tabbtn{flex:1 1 auto;white-space:nowrap;border:none;background:transparent;color:var(--gray);font-size:14px;font-weight:700;padding:10px 12px;border-radius:9px;cursor:pointer;transition:.15s}
+.tabbtn:hover{background:var(--ice);color:var(--navy)}
+.tabbtn.active{background:var(--navy);color:#fff}
+
+/* 통계 카드(버튼화) */
+.stat{cursor:pointer;border:1px solid var(--line);transition:.15s;font-family:inherit}
+.stat:hover{border-color:var(--blue);background:var(--ice);transform:translateY(-1px)}
+.stat:active{transform:translateY(0)}
+
+/* 가입자목록 조회바 */
+.searchbar{margin-bottom:12px}
+.searchbar .srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.searchbar select,.searchbar input{padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;color:var(--ink);background:#fff;font-family:inherit}
+.searchbar select{flex:0 0 auto;min-width:130px}
+.searchbar input{flex:1 1 180px;min-width:140px}
+.searchbar select:focus,.searchbar input:focus{outline:none;border-color:var(--navy)}
+
+@media (max-width:640px){
+  .tabbtn{font-size:13px;padding:9px 8px}
+  .searchbar .srow{flex-direction:column;align-items:stretch}
+  .searchbar select,.searchbar input{width:100%}
+  .searchbar #fSearch{width:100%}
+}

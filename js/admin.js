@@ -2,6 +2,9 @@
 const $ = s => document.querySelector(s);
 let busy = false;
 
+let _allV = [];
+const listFilter = { status: 'all', keyword: '' };
+
 async function render() {
   if (busy || document.hidden) return;
   // 차주번호 편집 중에는 폴링 갱신을 보류(입력값 보존)
@@ -10,6 +13,7 @@ async function render() {
   busy = true;
   try {
     const vs = await PARKLINK.listVehicles();
+    _allV = vs;
     let nA = 0, nR = 0, nE = 0;
     const renew = [];
     vs.forEach(v => { const s = PARKLINK.statusOf(v); if (s.expired) { nE++; renew.push([v, s]); } else if (s.renewDue) { nR++; renew.push([v, s]); } else nA++; });
@@ -34,39 +38,98 @@ async function render() {
         </div>`).join('');
     } else rc.style.display = 'none';
 
-    // 목록
-    const tb = $('#vtable tbody');
-    if (!vs.length) { tb.innerHTML = ''; $('#empty').style.display = 'block'; }
-    else {
-      $('#empty').style.display = 'none';
-      tb.innerHTML = vs.map(v => {
-        const s = PARKLINK.statusOf(v);
-        return `<tr>
-          <td data-label="차량"><b>${v.name}</b><br><span class="muted">${PARKLINK.subMonths(v)}개월 구독</span></td>
-          <td data-label="차주번호">
-            <input class="phone-edit" data-phone="${v.token}" value="${v.ownerPhone}" inputmode="tel" />
-            <button class="btn btn-outline btn-xs" data-act="savephone" data-token="${v.token}">변경</button>
-          </td>
-          <td data-label="토큰"><span class="tokenpill">${v.token}</span></td>
-          <td data-label="시작">${PARKLINK.fmtDate(v.startAt)}</td>
-          <td data-label="만료">${PARKLINK.fmtDate(v.expireAt)}</td>
-          <td data-label="남은일">${s.expired ? '—' : 'D-' + s.daysLeft}</td>
-          <td data-label="상태">${PARKLINK.statusBadge(s)}</td>
-          <td data-label="관리"><div class="admin-actions right">
-            <button class="btn btn-outline" data-act="qr" data-token="${v.token}">QR</button>
-            <button class="btn btn-outline" data-act="extend1" data-token="${v.token}">+1개월</button>
-            <button class="btn btn-outline" data-act="exp10" data-token="${v.token}">만료-10일</button>
-            <button class="btn btn-outline" data-act="exp0" data-token="${v.token}">만료처리</button>
-            <button class="btn btn-danger" data-act="del" data-token="${v.token}">해지</button>
-          </div></td>
-        </tr>`;
-      }).join('');
-    }
-    document.querySelectorAll('button[data-act]').forEach(b => { b.onclick = () => action(b.dataset.act, b.dataset.token); });
+    renderList();   // 목록(필터 적용)
   } catch (e) {
     console.error(e);
     if (/401|403|JWT|exp/i.test(e.message || '')) { PARKLINK.adminLogout(); location.reload(); return; }
   } finally { busy = false; }
+}
+
+// 상태 일치 판정(통계 카드와 동일 기준)
+function matchStatus(v, status) {
+  if (status === 'all') return true;
+  const s = PARKLINK.statusOf(v);
+  if (status === 'expired') return s.expired;
+  if (status === 'renew') return !s.expired && s.renewDue;
+  if (status === 'active') return !s.expired && !s.renewDue;
+  return true;
+}
+function applyFilter(vs) {
+  const kw = (listFilter.keyword || '').trim().toLowerCase();
+  return vs.filter(v => {
+    if (!matchStatus(v, listFilter.status)) return false;
+    if (!kw) return true;
+    return (v.name || '').toLowerCase().includes(kw)
+      || (v.token || '').toLowerCase().includes(kw)
+      || (v.ownerPhone || '').toLowerCase().includes(kw);
+  });
+}
+function bindActions() {
+  document.querySelectorAll('button[data-act]').forEach(b => { b.onclick = () => action(b.dataset.act, b.dataset.token); });
+}
+function renderList() {
+  const tb = $('#vtable tbody'); if (!tb) return;
+  const list = applyFilter(_allV);
+  const labelMap = { all: 'ALL(전체)', active: '구독중', renew: '만료 임박', expired: '만료' };
+  const cnt = $('#listCount');
+  if (cnt) cnt.textContent = `조회 결과 ${list.length}건 · 상태: ${labelMap[listFilter.status]}${listFilter.keyword ? ' · "' + listFilter.keyword + '"' : ''}`;
+  if (!list.length) { tb.innerHTML = ''; $('#empty').style.display = 'block'; bindActions(); return; }
+  $('#empty').style.display = 'none';
+  tb.innerHTML = list.map(v => {
+    const s = PARKLINK.statusOf(v);
+    return `<tr>
+      <td data-label="차량"><b>${v.name}</b><br><span class="muted">${PARKLINK.subMonths(v)}개월 구독</span></td>
+      <td data-label="차주번호">
+        <input class="phone-edit" data-phone="${v.token}" value="${v.ownerPhone}" inputmode="tel" />
+        <button class="btn btn-outline btn-xs" data-act="savephone" data-token="${v.token}">변경</button>
+      </td>
+      <td data-label="토큰"><span class="tokenpill">${v.token}</span></td>
+      <td data-label="시작">${PARKLINK.fmtDate(v.startAt)}</td>
+      <td data-label="만료">${PARKLINK.fmtDate(v.expireAt)}</td>
+      <td data-label="남은일">${s.expired ? '—' : 'D-' + s.daysLeft}</td>
+      <td data-label="상태">${PARKLINK.statusBadge(s)}</td>
+      <td data-label="관리"><div class="admin-actions right">
+        <button class="btn btn-outline" data-act="qr" data-token="${v.token}">QR</button>
+        <button class="btn btn-outline" data-act="extend1" data-token="${v.token}">+1개월</button>
+        <button class="btn btn-outline" data-act="exp10" data-token="${v.token}">만료-10일</button>
+        <button class="btn btn-outline" data-act="exp0" data-token="${v.token}">만료처리</button>
+        <button class="btn btn-danger" data-act="del" data-token="${v.token}">해지</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  bindActions();
+}
+
+// ── 탭 전환 ──
+function showTab(name) {
+  document.querySelectorAll('.tabpanel').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById('tab-' + name);
+  if (panel) panel.style.display = 'block';
+  document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  if (name === 'subs') loadSubs();
+  else if (name === 'errors') loadErrorLogs();
+  else if (name === 'list') renderList();
+}
+function initTabs() {
+  document.querySelectorAll('.tabbtn').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  // 현황 숫자 클릭 → 가입자목록 탭으로 이동 + 상태 필터 적용
+  document.querySelectorAll('.stat[data-stat]').forEach(b => b.addEventListener('click', () => {
+    listFilter.status = b.dataset.stat; listFilter.keyword = '';
+    const fs = document.getElementById('fStatus'); if (fs) fs.value = listFilter.status;
+    const fk = document.getElementById('fKeyword'); if (fk) fk.value = '';
+    showTab('list');
+  }));
+  // 조회(검색)
+  const doSearch = () => {
+    listFilter.status = document.getElementById('fStatus').value;
+    listFilter.keyword = document.getElementById('fKeyword').value;
+    renderList();
+  };
+  const fSearch = document.getElementById('fSearch'); if (fSearch) fSearch.addEventListener('click', doSearch);
+  const fKeyword = document.getElementById('fKeyword'); if (fKeyword) fKeyword.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+  const fStatus = document.getElementById('fStatus'); if (fStatus) fStatus.addEventListener('change', doSearch);
+  // 현황으로 복귀
+  const btd = document.getElementById('backToDash'); if (btd) btd.addEventListener('click', () => showTab('dashboard'));
 }
 
 async function action(act, token) {
@@ -127,11 +190,11 @@ let adminStarted = false;
 function startAdmin() {
   if (adminStarted) return; adminStarted = true;
   const g = document.getElementById('adminGate'); if (g) g.style.display = 'none';
+  initTabs();
   setInterval(render, 3000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   render();
-  // 에러 로그
-  loadErrorLogs();
+  // 에러 로그 버튼
   const er = document.getElementById('errRefresh');
   const ec = document.getElementById('errClear');
   if (er) er.addEventListener('click', loadErrorLogs);
@@ -139,10 +202,11 @@ function startAdmin() {
     if (!confirm('에러 로그를 전체 삭제할까요?')) return;
     try { await PARKLINK.clearErrorLogs(); loadErrorLogs(); } catch (e) { alert('삭제 실패: ' + e.message); }
   });
-  // 구독 신청 관리
-  loadSubs();
+  // 구독 신청 새로고침 버튼
   const sr = document.getElementById('subsRefresh');
   if (sr) sr.addEventListener('click', loadSubs);
+  // 시작 탭: 가입자현황
+  showTab('dashboard');
 }
 function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 async function loadErrorLogs() {
