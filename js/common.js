@@ -49,6 +49,11 @@ window.PARKLINK = (function () {
     return txt ? JSON.parse(txt) : null;
   }
 
+  // 관리자 PIN 서버 검증(소스에 PIN 미보관) — Supabase 보안함수로 해시 비교
+  async function verifyAdminPin(pin) {
+    return (await rpc('verify_admin_pin', { p_pin: String(pin || '') })) === true;
+  }
+
   /* ---------------- 관리자 인증(Supabase Auth) ---------------- */
   function setAuth(jwt) { AUTH_BEARER = jwt || SUPABASE_KEY; }
   async function adminLogin(email, password) {
@@ -197,7 +202,7 @@ window.PARKLINK = (function () {
 
   return {
     REASONS, REPLIES, RENEW_DAYS,
-    setAuth, adminLogin, adminRestore, adminLogout,
+    setAuth, adminLogin, adminRestore, adminLogout, verifyAdminPin,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,
     sendRequest, answerRequest, listRequests, getRequest, latestAnswered, logShock, listShocks, reset,

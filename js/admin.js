@@ -122,8 +122,7 @@ function showAdminToast(msg, isError) {
   t._t = setTimeout(() => { t.className = 'pk-toast' + (isError ? ' err' : ''); }, 3000);
 }
 
-/* ---------- 관리자 게이트 (PIN 1차 + Supabase Auth 2차) ---------- */
-const ADMIN_PIN = '0000'; // ⚠️ 배포 전 반드시 변경하세요 (소프트 1차 차단용)
+/* ---------- 관리자 게이트 (PIN 1차[서버검증] + Supabase Auth 2차) ---------- */
 let adminStarted = false;
 function startAdmin() {
   if (adminStarted) return; adminStarted = true;
@@ -137,11 +136,25 @@ function initGate() {
   if (PARKLINK.adminRestore()) { startAdmin(); return; }   // 기존 세션 있으면 바로 진입
   const pinStep = document.getElementById('gatePin');
   const loginStep = document.getElementById('gateLogin');
-  document.getElementById('pinBtn').addEventListener('click', () => {
-    if (document.getElementById('pinInput').value === ADMIN_PIN) {
-      pinStep.style.display = 'none'; loginStep.style.display = 'block'; document.getElementById('loginEmail').focus();
-    } else gateErr('pinErr', 'PIN이 올바르지 않습니다.');
-  });
+  const pinBtn = document.getElementById('pinBtn');
+  async function checkPin() {
+    const pin = document.getElementById('pinInput').value.trim();
+    if (!pin) { gateErr('pinErr', 'PIN을 입력하세요.'); return; }
+    pinBtn.disabled = true; gateErr('pinErr', '');
+    try {
+      const ok = await PARKLINK.verifyAdminPin(pin);
+      if (ok) {
+        pinStep.style.display = 'none'; loginStep.style.display = 'block'; document.getElementById('loginEmail').focus();
+      } else {
+        gateErr('pinErr', 'PIN이 올바르지 않습니다.');
+      }
+    } catch (e) {
+      gateErr('pinErr', '확인 중 오류: ' + e.message);
+    } finally {
+      pinBtn.disabled = false;
+    }
+  }
+  pinBtn.addEventListener('click', checkPin);
   document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pinBtn').click(); });
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const email = document.getElementById('loginEmail').value.trim();
