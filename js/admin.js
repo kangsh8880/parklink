@@ -3,7 +3,7 @@ const $ = s => document.querySelector(s);
 let busy = false;
 
 async function render() {
-  if (busy) return;
+  if (busy || document.hidden) return;
   // 차주번호 편집 중에는 폴링 갱신을 보류(입력값 보존)
   const ae = document.activeElement;
   if (ae && ae.classList && ae.classList.contains('phone-edit')) return;
@@ -65,6 +65,7 @@ async function render() {
     document.querySelectorAll('button[data-act]').forEach(b => { b.onclick = () => action(b.dataset.act, b.dataset.token); });
   } catch (e) {
     console.error(e);
+    if (/401|403|JWT|exp/i.test(e.message || '')) { PARKLINK.adminLogout(); location.reload(); return; }
   } finally { busy = false; }
 }
 
@@ -121,5 +122,35 @@ function showAdminToast(msg, isError) {
   t._t = setTimeout(() => { t.className = 'pk-toast' + (isError ? ' err' : ''); }, 3000);
 }
 
-setInterval(render, 3000);
-render();
+/* ---------- 관리자 게이트 (PIN 1차 + Supabase Auth 2차) ---------- */
+const ADMIN_PIN = '8880'; // ⚠️ 배포 전 반드시 변경하세요 (소프트 1차 차단용)
+let adminStarted = false;
+function startAdmin() {
+  if (adminStarted) return; adminStarted = true;
+  const g = document.getElementById('adminGate'); if (g) g.style.display = 'none';
+  setInterval(render, 3000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  render();
+}
+function gateErr(id, msg) { const e = document.getElementById(id); if (!e) return; e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; }
+function initGate() {
+  if (PARKLINK.adminRestore()) { startAdmin(); return; }   // 기존 세션 있으면 바로 진입
+  const pinStep = document.getElementById('gatePin');
+  const loginStep = document.getElementById('gateLogin');
+  document.getElementById('pinBtn').addEventListener('click', () => {
+    if (document.getElementById('pinInput').value === ADMIN_PIN) {
+      pinStep.style.display = 'none'; loginStep.style.display = 'block'; document.getElementById('loginEmail').focus();
+    } else gateErr('pinErr', 'PIN이 올바르지 않습니다.');
+  });
+  document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('pinBtn').click(); });
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pw = document.getElementById('loginPw').value;
+    if (!email || !pw) { gateErr('loginErr', '이메일과 비밀번호를 입력하세요.'); return; }
+    const btn = document.getElementById('loginBtn'); btn.disabled = true; btn.textContent = '로그인 중…';
+    try { await PARKLINK.adminLogin(email, pw); startAdmin(); }
+    catch (e) { gateErr('loginErr', e.message); btn.disabled = false; btn.textContent = '로그인'; }
+  });
+  document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+}
+initGate();

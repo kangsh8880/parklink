@@ -10,13 +10,13 @@ function show(id) {
 }
 
 async function render() {
-  if (busy) return; busy = true;
+  if (busy || document.hidden) return; busy = true;
   try {
     const v = await PARKLINK.getVehicle(token);
-    if (!token || !v) { $('#topLabel').textContent = 'PARKLINK'; show('nodata'); return; }
+    if (!token || !v) { $('#topLabel').textContent = 'PARKLINK'; qrDrawn = false; show('nodata'); return; }
     const s = PARKLINK.statusOf(v);
     $('#topLabel').textContent = v.name + ' · 스캔하여 연락';
-    if (s.expired) { show('expired'); return; }
+    if (s.expired) { qrDrawn = false; show('expired'); return; }
 
     if (!qrDrawn) { $('#qrBox').innerHTML = PARKLINK.qrSvg(PARKLINK.senderUrl(token), 5); qrDrawn = true; }
 
@@ -31,4 +31,5 @@ async function render() {
 }
 
 setInterval(render, 2000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 render();

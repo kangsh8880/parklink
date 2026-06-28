@@ -1,6 +1,1 @@
-/* 허브 */
-document.getElementById('resetBtn').addEventListener('click', async function () {
-  if (!confirm('데모 데이터(차량·구독·요청)를 모두 비울까요?')) return;
-  try { await PARKLINK.reset(); alert('초기화되었습니다.'); }
-  catch (e) { alert('초기화 실패: ' + e.message); }
-});
+/* 허브 — 공개 페이지. 데이터 초기화는 관리자(로그인) 전용으로 이동됨. */

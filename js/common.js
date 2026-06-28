@@ -8,6 +8,8 @@ window.PARKLINK = (function () {
   const SUPABASE_URL = 'https://ydladdffjqpcjynqpjdd.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_hqsnudfSFzN78mCy3s92Qw_ZXBMl782';
   const REST = SUPABASE_URL + '/rest/v1/';
+  const AUTH_BASE = SUPABASE_URL + '/auth/v1';
+  let AUTH_BEARER = SUPABASE_KEY;            // 관리자 로그인 시 사용자 JWT로 교체
   const DAY = 86400000;
   const RENEW_DAYS = 14;
   const BASE = location.pathname.replace(/[^/]*$/, '');
@@ -25,7 +27,7 @@ window.PARKLINK = (function () {
   function H(extra) {
     return Object.assign({
       'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Authorization': 'Bearer ' + AUTH_BEARER,
       'Content-Type': 'application/json',
     }, extra || {});
   }
@@ -38,6 +40,33 @@ window.PARKLINK = (function () {
     const txt = await res.text();
     return txt ? JSON.parse(txt) : null;
   }
+
+  // RPC(보안 정의자 함수) 호출 — 익명 사용자의 vehicles 접근은 전부 이 경로로만.
+  async function rpc(fn, body) {
+    const res = await fetch(REST + 'rpc/' + fn, { method: 'POST', headers: H(), body: JSON.stringify(body || {}) });
+    if (!res.ok) throw new Error('Supabase rpc ' + fn + ' ' + res.status + ': ' + (await res.text()));
+    const txt = await res.text();
+    return txt ? JSON.parse(txt) : null;
+  }
+
+  /* ---------------- 관리자 인증(Supabase Auth) ---------------- */
+  function setAuth(jwt) { AUTH_BEARER = jwt || SUPABASE_KEY; }
+  async function adminLogin(email, password) {
+    const res = await fetch(AUTH_BASE + '/token?grant_type=password', {
+      method: 'POST', headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error_description || j.msg || ('로그인 실패 (' + res.status + ')'));
+    setAuth(j.access_token);
+    try { sessionStorage.setItem('parklink:adminJwt', j.access_token); } catch (e) {}
+    return true;
+  }
+  function adminRestore() {
+    try { const t = sessionStorage.getItem('parklink:adminJwt'); if (t) { setAuth(t); return true; } } catch (e) {}
+    return false;
+  }
+  function adminLogout() { setAuth(null); try { sessionStorage.removeItem('parklink:adminJwt'); } catch (e) {} }
 
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function makeToken() {
@@ -66,17 +95,12 @@ window.PARKLINK = (function () {
   }
   async function getVehicle(token) {
     if (!token) return null;
-    const rows = await api('GET', `vehicles?token=eq.${encodeURIComponent(token)}&select=*`);
+    const rows = await rpc('get_vehicle', { p_token: token });
     return rows && rows[0] ? vOut(rows[0]) : null;
   }
   async function createVehicle({ name, ownerPhone, months }) {
-    const now = Date.now();
-    const row = {
-      token: makeToken(), name: name || '내 차량', owner_phone: ownerPhone, months: Number(months),
-      created_at: now, start_at: now, expire_at: addMonths(now, months), renew_notified: false,
-    };
-    const res = await api('POST', 'vehicles', row);
-    return vOut(res[0]);
+    const rows = await rpc('create_vehicle', { p_name: name || '내 차량', p_owner_phone: ownerPhone, p_months: Number(months) });
+    return vOut(rows[0]);
   }
   async function extendVehicle(token, addM) {
     const v = await getVehicle(token); if (!v) return;
@@ -86,10 +110,11 @@ window.PARKLINK = (function () {
   async function setExpireInDays(token, days) {
     await api('PATCH', `vehicles?token=eq.${token}`, { expire_at: Date.now() + days * DAY, renew_notified: false });
   }
-  async function setOwnerPhone(token, phone) { await api('PATCH', `vehicles?token=eq.${token}`, { owner_phone: phone }); }
+  async function setOwnerPhone(token, phone) { await rpc('set_owner_phone', { p_token: token, p_phone: phone }); }
   async function removeVehicle(token) {
     await api('DELETE', `requests?token=eq.${token}`);
     await api('DELETE', `shocks?token=eq.${token}`);
+    await api('DELETE', `push_subs?token=eq.${token}`);
     await api('DELETE', `vehicles?token=eq.${token}`);
   }
   async function markRenewNotified(token) { await api('PATCH', `vehicles?token=eq.${token}`, { renew_notified: true }); }
@@ -147,6 +172,7 @@ window.PARKLINK = (function () {
   async function reset() {
     await api('DELETE', 'requests?ts=gte.0');
     await api('DELETE', 'shocks?ts=gte.0');
+    await api('DELETE', 'push_subs?created_at=gte.0');
     await api('DELETE', 'vehicles?created_at=gte.0');
   }
 
@@ -171,6 +197,7 @@ window.PARKLINK = (function () {
 
   return {
     REASONS, REPLIES, RENEW_DAYS,
+    setAuth, adminLogin, adminRestore, adminLogout,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,
     sendRequest, answerRequest, listRequests, getRequest, latestAnswered, logShock, listShocks, reset,

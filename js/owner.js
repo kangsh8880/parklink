@@ -129,6 +129,7 @@ async function boot() {
 
   render();
   setInterval(render, 2000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   initAssistant();
 }
 
@@ -194,7 +195,7 @@ function showToast(msg, isError) {
 }
 
 async function render() {
-  if (busy) return; busy = true;
+  if (busy || document.hidden) return; busy = true;
   try {
     const v = await PARKLINK.getVehicle(token);
     if (!v) { $('#valid').style.display = 'none'; $('#invalid').style.display = 'block'; return; }

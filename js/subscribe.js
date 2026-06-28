@@ -29,7 +29,7 @@ function showResult(v) {
     <dt>차량</dt><dd>${v.name}</dd>
     <dt>차주 번호</dt><dd>${v.ownerPhone}</dd>
     <dt>고유 토큰</dt><dd><span class="tokenpill">${v.token}</span></dd>
-    <dt>구독 기간</dt><dd>${v.months}개월</dd>
+    <dt>구독 기간</dt><dd>${PARKLINK.subMonths(v)}개월</dd>
     <dt>시작일</dt><dd>${PARKLINK.fmtDate(v.startAt)}</dd>
     <dt>만료일</dt><dd>${PARKLINK.fmtDate(v.expireAt)} (D-${s.daysLeft})</dd>`;
 

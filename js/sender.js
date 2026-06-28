@@ -27,6 +27,7 @@ async function boot() {
   $('#vehLead').textContent = `${vehicle.name} · 전화번호 없이 차주에게 안심 연결됩니다.`;
   renderReasons();
   setInterval(refresh, 2500);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   initAssistant();
 }
 
@@ -81,7 +82,7 @@ async function send(key) {
 }
 
 async function refresh() {
-  if (!myReqId) return;
+  if (!myReqId || document.hidden) return;
   const r = await PARKLINK.getRequest(myReqId);
   if (!r) return;
   setLinks(r);
