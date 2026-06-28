@@ -41,7 +41,17 @@ window.PARKPUSH = (function () {
       headers: Object.assign({}, H, { Prefer: 'return=minimal' }),
       body: JSON.stringify({ endpoint: j.endpoint, token: token, p256dh: j.keys.p256dh, auth: j.keys.auth, created_at: Date.now() }),
     });
-    if (!res.ok) throw new Error('구독 저장 실패: ' + res.status + ' ' + (await res.text()));
+    if (res.status === 409) {
+      // 동일 endpoint가 이미 존재(동시 호출/재구독) → 토큰만 갱신하여 멱등 처리
+      const up = await fetch(SUPA_URL + '/rest/v1/push_subs?endpoint=eq.' + encodeURIComponent(j.endpoint), {
+        method: 'PATCH',
+        headers: Object.assign({}, H, { Prefer: 'return=minimal' }),
+        body: JSON.stringify({ token: token, p256dh: j.keys.p256dh, auth: j.keys.auth, created_at: Date.now() }),
+      });
+      if (!up.ok) throw new Error('구독 갱신 실패: ' + up.status + ' ' + (await up.text()));
+    } else if (!res.ok) {
+      throw new Error('구독 저장 실패: ' + res.status + ' ' + (await res.text()));
+    }
     localStorage.setItem('parklink:pushEp', j.endpoint);
     return true;
   }
