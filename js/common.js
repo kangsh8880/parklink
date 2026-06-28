@@ -166,14 +166,8 @@ window.PARKLINK = (function () {
   }
 
   async function sendRequest(token, reasonKey) {
-    const r = REASONS.find(x => x.key === reasonKey);
-    const id = uid();
-    await api('POST', 'requests', {
-      id, token, reason: r.label, descr: r.desc, urgency: r.urgency, cls: r.cls,
-      location: LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)],
-      ts: Date.now(), status: 'pending', reply: null, reply_ts: null,
-    });
-    return id;
+    // 서버측 보안 함수로만 생성: 차량 유효성·내용 확정·레이트리밋을 서버가 수행
+    return await rpc('create_request', { p_token: token, p_reason_key: reasonKey });
   }
   async function answerRequest(id, message) {
     await api('PATCH', `requests?id=eq.${id}`, { status: 'answered', reply: message, reply_ts: Date.now() });

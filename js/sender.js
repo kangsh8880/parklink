@@ -88,7 +88,13 @@ async function send(key) {
     $('#keepOpenModal').style.display = 'flex';
     // 차주에게 웹푸시 발송 트리거(잠금화면 알림)
     if (window.PARKPUSH) PARKPUSH.notify(token, 'PARKLINK · ' + vehicle.name, `${r.reason} (${r.urgency}) · ${r.location}`);
-  } catch (e) { alert('전송 실패: ' + e.message); }
+  } catch (e) {
+    let m = '전송에 실패했어요. 잠시 후 다시 시도해 주세요.';
+    if (/rate_limited/.test(e.message)) m = '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.';
+    else if (/expired/.test(e.message)) m = '이 차량의 PARKLINK 구독이 만료되었습니다.';
+    else if (/invalid_token|invalid_reason/.test(e.message)) m = '유효하지 않은 요청입니다.';
+    alert(m);
+  }
 }
 
 // 닫기 경고: 회신 대기 중에는 화면 이탈 시 브라우저 경고

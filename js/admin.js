@@ -149,7 +149,10 @@ function initGate() {
         gateErr('pinErr', 'PIN이 올바르지 않습니다.');
       }
     } catch (e) {
-      gateErr('pinErr', '확인 중 오류: ' + e.message);
+      const msg = /rate_limited/.test(e.message)
+        ? 'PIN 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.'
+        : ('확인 중 오류: ' + e.message);
+      gateErr('pinErr', msg);
     } finally {
       pinBtn.disabled = false;
     }
