@@ -99,15 +99,6 @@ async function boot() {
   alertsEnabled = !userOff;
   toggle.checked = !userOff;
 
-  // 빠른 회신(상시) 버튼 구성
-  const qr = $('#quickReplies');
-  if (qr) {
-    qr.innerHTML = PARKLINK.REPLIES.map((m, i) =>
-      `<button class="btn ${i === 0 ? 'btn-primary full' : 'btn-outline'}" data-qr="${m}">${m}</button>`).join('');
-    qr.querySelectorAll('button[data-qr]').forEach(b =>
-      b.addEventListener('click', () => quickReply(b.dataset.qr)));
-  }
-
   toggle.addEventListener('change', async () => {
     if (toggle.checked) await enableAlerts(true);
     else await disableAlerts();
@@ -180,26 +171,6 @@ function replyButtons(id) {
     `</div>`;
 }
 
-// 빠른 회신: 가장 최근 pending 요청에 즉시 응답(없으면 가장 최근 요청에 재응답)
-async function quickReply(msg) {
-  try {
-    const reqs = await PARKLINK.listRequests(token);
-    let target = reqs.find(r => r.status === 'pending') || reqs[0];
-    if (!target) { setQuickHint('아직 받은 요청이 없습니다.'); return; }
-    await PARKLINK.answerRequest(target.id, msg);
-    setQuickHint(`✓ '${msg}'로 응답했습니다.`);
-    render();
-  } catch (e) { setQuickHint('응답 실패: ' + e.message); }
-}
-function setQuickHint(t) {
-  const e = document.querySelector('#quickReplyHint');
-  if (!e) return;
-  e.textContent = t;
-  e.dataset.acted = '1';
-  clearTimeout(e._t);
-  e._t = setTimeout(() => { delete e.dataset.acted; }, 3000);
-}
-
 // 화면 중앙 상단에 잠깐 떴다가 3초 후 사라지는 알림 메시지
 function showToast(msg, isError) {
   let t = document.getElementById('pkToast');
@@ -243,13 +214,6 @@ async function render() {
 
     const reqs = await PARKLINK.listRequests(token);
 
-    const pendingIds = reqs.filter(r => r.status === 'pending').map(r => r.id);
-    const qhint = $('#quickReplyHint');
-    if (qhint && !qhint.dataset.acted) {
-      qhint.textContent = pendingIds.length
-        ? `응답 대기 중 ${pendingIds.length}건 — 아래 버튼으로 바로 응답하세요.`
-        : '새 요청이 오면 아래 버튼으로 바로 응답할 수 있어요.';
-    }
     let freshIds = [];
     if (seenIds === null) { seenIds = new Set(reqs.map(r => r.id)); }
     else { reqs.forEach(r => { if (r.status === 'pending' && !seenIds.has(r.id)) { freshIds.push(r.id); notifyNew(r); } seenIds.add(r.id); }); }
