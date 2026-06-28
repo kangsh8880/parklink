@@ -255,7 +255,10 @@ window.PARKLINK = (function () {
     return await rpc('create_request', { p_token: token, p_reason_key: reasonKey });
   }
   async function answerRequest(id, message) {
-    await api('PATCH', `requests?id=eq.${id}`, { status: 'answered', reply: message, reply_ts: Date.now() });
+    // 직접 UPDATE 금지(보안): 회신은 정해진 4종(REPLIES) 인덱스로만 서버 RPC가 확정.
+    const idx = REPLIES.indexOf(message);
+    if (idx < 0) throw new Error('허용되지 않은 회신입니다');
+    await rpc('answer_request', { p_id: id, p_reply_idx: idx });
   }
   async function listRequests(token) {
     const rows = await api('GET', `requests?token=eq.${token}&select=*&order=ts.desc`);
