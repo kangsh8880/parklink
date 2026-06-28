@@ -139,6 +139,25 @@ function initTabs() {
   const fStatus = document.getElementById('fStatus'); if (fStatus) fStatus.addEventListener('change', doSearch);
   // 현황으로 복귀
   const btd = document.getElementById('backToDash'); if (btd) btd.addEventListener('click', () => showTab('dashboard'));
+
+  // 구독신청관리 조회
+  const doSubSearch = () => {
+    subFilter.status = document.getElementById('subStatus').value;
+    subFilter.keyword = document.getElementById('subKeyword').value;
+    renderSubs();
+  };
+  const subSearch = document.getElementById('subSearch'); if (subSearch) subSearch.addEventListener('click', doSubSearch);
+  const subStatus = document.getElementById('subStatus'); if (subStatus) subStatus.addEventListener('change', doSubSearch);
+  const subKeyword = document.getElementById('subKeyword');
+  if (subKeyword) {
+    const grow = () => { subKeyword.style.height = 'auto'; subKeyword.style.height = Math.min(subKeyword.scrollHeight, 120) + 'px'; };
+    subKeyword.addEventListener('input', grow);
+    subKeyword.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSubSearch(); }
+      else { setTimeout(grow, 0); }
+    });
+    grow();
+  }
 }
 
 async function action(act, token) {
@@ -291,21 +310,44 @@ function subRow(r) {
         <button class="btn btn-outline btn-sm" data-rej="${r.id}">반려</button></div>` : ''}
   </div>`;
 }
+let _allSubs = [];
+const subFilter = { status: 'all', keyword: '' };
+
 async function loadSubs() {
   const box = document.getElementById('subsList');
-  const cnt = document.getElementById('subsCount');
   if (!box) return;
   try {
     const rows = await PARKLINK.listSubscriptions();
-    const pending = (rows || []).filter(r => r.status === 'pending');
+    _allSubs = rows || [];
+    const cnt = document.getElementById('subsCount');
+    const pending = _allSubs.filter(r => r.status === 'pending');
     if (cnt) cnt.textContent = '대기 ' + pending.length + '건';
-    if (!rows || !rows.length) { box.innerHTML = '<span class="muted">신청 내역이 없습니다.</span>'; return; }
-    box.innerHTML = rows.map(subRow).join('');
-    box.querySelectorAll('[data-appr]').forEach(b => b.addEventListener('click', () => approveSub(b.dataset.appr)));
-    box.querySelectorAll('[data-rej]').forEach(b => b.addEventListener('click', () => rejectSub(b.dataset.rej)));
+    renderSubs();
   } catch (e) {
     box.innerHTML = '<span class="muted">불러오기 실패: ' + escHtml(e.message) + '</span>';
   }
+}
+function applySubFilter(rows) {
+  const kw = (subFilter.keyword || '').trim().toLowerCase();
+  return rows.filter(r => {
+    if (subFilter.status !== 'all' && r.status !== subFilter.status) return false;
+    if (!kw) return true;
+    return (r.name || '').toLowerCase().includes(kw)
+      || (r.owner_phone || '').toLowerCase().includes(kw)
+      || (r.applicant_name || '').toLowerCase().includes(kw);
+  });
+}
+function renderSubs() {
+  const box = document.getElementById('subsList'); if (!box) return;
+  const list = applySubFilter(_allSubs);
+  const labelMap = { all: 'ALL(전체)', pending: '승인대기', active: '승인', rejected: '반려' };
+  const lc = document.getElementById('subListCount');
+  if (lc) lc.textContent = `조회 결과 ${list.length}건 · 상태: ${labelMap[subFilter.status]}${subFilter.keyword ? ' · "' + subFilter.keyword + '"' : ''}`;
+  if (!_allSubs.length) { box.innerHTML = '<span class="muted">신청 내역이 없습니다.</span>'; return; }
+  if (!list.length) { box.innerHTML = '<span class="muted">조회된 신청이 없습니다.</span>'; return; }
+  box.innerHTML = list.map(subRow).join('');
+  box.querySelectorAll('[data-appr]').forEach(b => b.addEventListener('click', () => approveSub(b.dataset.appr)));
+  box.querySelectorAll('[data-rej]').forEach(b => b.addEventListener('click', () => rejectSub(b.dataset.rej)));
 }
 async function approveSub(id) {
   if (!confirm('이 신청을 승인하고 차량을 발급할까요?')) return;

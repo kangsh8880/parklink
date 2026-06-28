@@ -71,6 +71,21 @@
 
   <!-- 2) 구독신청관리 -->
   <section class="tabpanel" id="tab-subs" style="display:none">
+    <!-- 조회(검색) 영역 -->
+    <div class="card searchbar">
+      <div class="srow">
+        <select id="subStatus">
+          <option value="all">ALL (전체)</option>
+          <option value="pending">승인대기</option>
+          <option value="active">승인</option>
+          <option value="rejected">반려</option>
+        </select>
+        <textarea id="subKeyword" rows="1" placeholder="차량명 · 번호판 · 전화번호 검색"></textarea>
+        <button class="btn btn-primary btn-sm" id="subSearch">조회</button>
+      </div>
+      <div class="muted mt8" id="subListCount"></div>
+    </div>
+
     <div class="card" id="subsCard">
       <div class="row"><h2 style="margin:0">📋 구독 신청 관리</h2><span class="spacer"></span>
         <span class="muted" id="subsCount"></span>
