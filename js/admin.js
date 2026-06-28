@@ -126,7 +126,16 @@ function initTabs() {
     renderList();
   };
   const fSearch = document.getElementById('fSearch'); if (fSearch) fSearch.addEventListener('click', doSearch);
-  const fKeyword = document.getElementById('fKeyword'); if (fKeyword) fKeyword.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+  const fKeyword = document.getElementById('fKeyword');
+  if (fKeyword) {
+    const autoGrow = () => { fKeyword.style.height = 'auto'; fKeyword.style.height = Math.min(fKeyword.scrollHeight, 120) + 'px'; };
+    fKeyword.addEventListener('input', autoGrow);
+    fKeyword.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSearch(); }  // Enter=검색
+      else { setTimeout(autoGrow, 0); }                                          // Shift+Enter 등=줄바꿈→높이 확장
+    });
+    autoGrow();
+  }
   const fStatus = document.getElementById('fStatus'); if (fStatus) fStatus.addEventListener('change', doSearch);
   // 현황으로 복귀
   const btd = document.getElementById('backToDash'); if (btd) btd.addEventListener('click', () => showTab('dashboard'));

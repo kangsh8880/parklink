@@ -353,15 +353,16 @@ h2.sec{margin:8px 0 8px}
 
 /* 가입자목록 조회바 */
 .searchbar{margin-bottom:12px}
-.searchbar .srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.searchbar select,.searchbar input{padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;color:var(--ink);background:#fff;font-family:inherit}
-.searchbar select{flex:0 0 auto;min-width:130px}
-.searchbar input{flex:1 1 180px;min-width:140px}
-.searchbar select:focus,.searchbar input:focus{outline:none;border-color:var(--navy)}
+.searchbar .srow{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.searchbar select,.searchbar textarea{padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;color:var(--ink);background:#fff;font-family:inherit;line-height:1.5}
+.searchbar select{flex:0 0 auto;min-width:130px;height:38px}
+.searchbar textarea{flex:1 1 180px;min-width:140px;resize:none;overflow:hidden;min-height:38px;max-height:120px;display:block}
+.searchbar #fSearch{flex:0 0 auto;height:38px}
+.searchbar select:focus,.searchbar textarea:focus{outline:none;border-color:var(--navy)}
 
 @media (max-width:640px){
   .tabbtn{font-size:13px;padding:9px 8px}
   .searchbar .srow{flex-direction:column;align-items:stretch}
-  .searchbar select,.searchbar input{width:100%}
+  .searchbar select,.searchbar textarea{width:100%;flex:1 1 auto}
   .searchbar #fSearch{width:100%}
 }
