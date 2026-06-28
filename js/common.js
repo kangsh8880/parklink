@@ -146,13 +146,21 @@ window.PARKLINK = (function () {
   const DOC_TERMS_VER = '2026-06-28';
   async function recordConsent(token) {
     try {
-      await api('POST', 'consents', {
-        token: token || null,
-        doc_privacy_version: DOC_PRIVACY_VER,
-        doc_terms_version: DOC_TERMS_VER,
-        agreed_at: Date.now(),
-        user_agent: (navigator.userAgent || '').slice(0, 300),
+      const res = await fetch(REST + 'consents', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY, Authorization: 'Bearer ' + AUTH_BEARER,
+          'Content-Type': 'application/json', Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          token: token || null,
+          doc_privacy_version: DOC_PRIVACY_VER,
+          doc_terms_version: DOC_TERMS_VER,
+          agreed_at: Date.now(),
+          user_agent: (navigator.userAgent || '').slice(0, 300),
+        }),
       });
+      if (!res.ok) throw new Error('consent ' + res.status + ' ' + (await res.text()));
       return true;
     } catch (e) { console.warn('동의 기록 실패:', e.message); return false; }
   }
