@@ -254,6 +254,10 @@ window.PARKLINK = (function () {
     // 서버측 보안 함수로만 생성: 차량 유효성·내용 확정·레이트리밋을 서버가 수행
     return await rpc('create_request', { p_token: token, p_reason_key: reasonKey });
   }
+  // 자가복구: 차량명+차주번호 정확일치 시 차주화면 토큰 반환(서버 RPC, 레이트리밋)
+  async function recoverOwnerLink(name, phone) {
+    return await rpc('recover_owner_link', { p_name: name, p_phone: phone });
+  }
   async function answerRequest(id, message) {
     // 직접 UPDATE 금지(보안): 회신은 정해진 4종(REPLIES) 인덱스로만 서버 RPC가 확정.
     const idx = REPLIES.indexOf(message);
@@ -313,7 +317,7 @@ window.PARKLINK = (function () {
     setAuth, adminLogin, adminRestore, adminLogout, verifyAdminPin,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,
-    sendRequest, answerRequest, listRequests, getRequest, latestAnswered, logShock, listShocks, reset,
+    sendRequest, answerRequest, recoverOwnerLink, listRequests, getRequest, latestAnswered, logShock, listShocks, reset,
     senderUrl, panelUrl, ownerUrl, tokenFromUrl, qrSvg, qrDataUrl,
     telDigits, fmtDate, fmtTime, timeAgo, urgencyBadge, statusBadge,
   };
