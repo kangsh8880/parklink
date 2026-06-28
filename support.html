@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARKLINK · 복구 요청 조회</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<meta name="theme-color" content="#365C89">
+</head>
+<body>
+<div class="topbar">
+  <div><span class="brand">PARKLINK</span> <span class="sub">복구 요청 조회</span></div>
+  <a class="home" href="index.html">← 메인화면</a>
+</div>
+
+<div class="wrap-narrow">
+  <h1>복구 요청 상태</h1>
+
+  <div id="loading" class="card"><p class="muted">상태를 불러오는 중…</p></div>
+
+  <div id="notfound" class="notfound" style="display:none">
+    <h2>요청을 찾을 수 없습니다</h2>
+    <p class="muted">조회 링크가 올바른지 확인하세요.</p>
+    <a class="btn btn-outline btn-sm mt8" href="recover.html">차주 화면 복구로 이동</a>
+  </div>
+
+  <!-- 접수됨(대기) -->
+  <div id="open" class="card" style="display:none">
+    <h2>⏳ 관리자 확인 대기 중</h2>
+    <dl class="kv" id="openInfo"></dl>
+    <p class="muted mt8">관리자가 등록 정보를 확인한 뒤 차주 화면 주소를 전달합니다. 이 페이지를 다시 열어 확인하세요.</p>
+  </div>
+
+  <!-- 답변됨(주소 전달) -->
+  <div id="answered" style="display:none">
+    <div class="card mint">
+      <h2>✓ 차주 화면 주소가 전달되었습니다</h2>
+      <dl class="kv" id="ansInfo"></dl>
+      <div id="ansNoteBox" class="note mt8" style="display:none"><span>💬</span><span id="ansNote"></span></div>
+      <a id="openOwner" class="btn btn-primary mt8" style="width:100%">🔔 차주 화면 열기</a>
+    </div>
+    <div class="card">
+      <h2>📱 홈 화면에 다시 추가</h2>
+      <div class="note"><span>1️⃣</span><span>위 <b>차주 화면 열기</b>를 누르세요.</span></div>
+      <div class="note mt8"><span>2️⃣</span><span>열린 차주 화면에서 다음 순서로 추가하세요:</span></div>
+      <div id="a2hsSteps" class="mt8"></div>
+    </div>
+  </div>
+
+  <div class="row mt8"><button class="btn btn-ghost btn-sm" id="refreshBtn">새로고침</button></div>
+</div>
+
+<footer class="site-footer">
+  <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a><br>
+  PARKLINK — 번호는 숨기고, 소통은 양방향으로
+</footer>
+
+<script src="js/common.js"></script>
+<script src="js/support.js"></script>
+</body>
+</html>

@@ -107,6 +107,7 @@ function showTab(name) {
   if (panel) panel.style.display = 'block';
   document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   if (name === 'subs') loadSubs();
+  else if (name === 'recover') loadSupportReqs();
   else if (name === 'errors') loadErrorLogs();
   else if (name === 'list') renderList();
 }
@@ -233,6 +234,9 @@ function startAdmin() {
   // 구독 신청 새로고침 버튼
   const sr = document.getElementById('subsRefresh');
   if (sr) sr.addEventListener('click', loadSubs);
+  // 복구요청 새로고침 버튼
+  const supr = document.getElementById('supRefresh');
+  if (supr) supr.addEventListener('click', loadSupportReqs);
   // 시작 탭: 가입자현황
   showTab('dashboard');
 }
@@ -359,4 +363,71 @@ async function rejectSub(id) {
   if (reason === null) return;
   try { await PARKLINK.rejectSubscription(id, reason); loadSubs(); }
   catch (e) { alert('반려 실패: ' + e.message); }
+}
+
+/* ───────── 복구 요청(차주 화면 주소 전달) ───────── */
+let _allSup = [];
+
+async function loadSupportReqs() {
+  const box = document.getElementById('supList'); if (!box) return;
+  try {
+    const rows = await PARKLINK.listSupportRequests();
+    _allSup = rows || [];
+    const open = _allSup.filter(r => r.status === 'open');
+    const c = document.getElementById('supCount');
+    if (c) c.textContent = '대기 ' + open.length + '건';
+    renderSupportReqs();
+  } catch (e) {
+    box.innerHTML = '<span class="muted">불러오기 실패: ' + escHtml(e.message) + '</span>';
+  }
+}
+
+function renderSupportReqs() {
+  const box = document.getElementById('supList'); if (!box) return;
+  if (!_allSup.length) { box.innerHTML = '<span class="muted">복구 요청이 없습니다.</span>'; return; }
+  box.innerHTML = _allSup.map(supRow).join('');
+  box.querySelectorAll('[data-ans]').forEach(b => b.addEventListener('click', () => answerSup(b.dataset.ans)));
+}
+
+function supRow(r) {
+  const dt = PARKLINK.fmtDate(Number(r.created_at));
+  const memo = r.memo ? `<div class="muted" style="font-size:12.5px">메모: ${escHtml(r.memo)}</div>` : '';
+  if (r.status === 'answered') {
+    return `<div class="req answered">
+      <div><b>${escHtml(r.name)}</b> · ${escHtml(r.phone)} <span class="muted">(${dt})</span></div>
+      ${memo}
+      <div class="answer">✓ 전달함 · 토큰 ${escHtml(r.answer_token || '')}</div></div>`;
+  }
+  const match = r.match_token
+    ? `<div class="note mt8"><span>✅</span><span>전화번호 매칭: <b>${escHtml(r.match_name || '')}</b> · 토큰 <b>${escHtml(r.match_token)}</b></span></div>`
+    : `<div class="note mt8"><span>⚠️</span><span>전화번호로 매칭된 차량이 없습니다. <b>가입자목록</b>에서 확인 후 토큰을 직접 입력하세요.</span></div>`;
+  const v = r.match_token ? escHtml(r.match_token) : '';
+  return `<div class="req">
+    <div><b>${escHtml(r.name)}</b> · ${escHtml(r.phone)} <span class="muted">(${dt})</span></div>
+    ${memo}${match}
+    <div class="srow mt8">
+      <input class="supTok" data-id="${escHtml(r.id)}" type="text" placeholder="전달할 토큰(PL...)" value="${v}" style="flex:1">
+      <button class="btn btn-primary btn-sm" data-ans="${escHtml(r.id)}">주소 전달</button>
+    </div>
+    <input class="supNote" data-id="${escHtml(r.id)}" type="text" placeholder="추가 안내(선택)" style="width:100%;margin-top:6px">
+  </div>`;
+}
+
+async function answerSup(id) {
+  const tokEl = document.querySelector('.supTok[data-id="' + id + '"]');
+  const noteEl = document.querySelector('.supNote[data-id="' + id + '"]');
+  const token = (tokEl ? tokEl.value : '').trim();
+  const note = (noteEl ? noteEl.value : '').trim();
+  if (!token) { alert('전달할 차량 토큰을 입력하세요.'); return; }
+  if (!confirm('이 차주에게 토큰 ' + token + ' 의 차주 화면 주소를 전달할까요?')) return;
+  try {
+    await PARKLINK.answerSupportRequest(id, token, note);
+    alert('전달 완료');
+    loadSupportReqs();
+  } catch (e) {
+    const m = String(e.message || '');
+    if (/invalid_token/.test(m)) alert('등록되지 않은 토큰입니다. 가입자목록에서 정확한 토큰을 확인하세요.');
+    else if (/not_found/.test(m)) alert('요청을 찾을 수 없습니다.');
+    else alert('전달 실패: ' + e.message);
+  }
 }

@@ -258,6 +258,21 @@ window.PARKLINK = (function () {
   async function recoverOwnerLink(name, phone) {
     return await rpc('recover_owner_link', { p_name: name, p_phone: phone });
   }
+  // 복구 요청함(차주) — 요청 생성/조회
+  async function createSupportRequest(name, phone, memo) {
+    return await rpc('create_support_request', { p_name: name, p_phone: phone, p_memo: memo || '' });
+  }
+  async function getSupportRequest(id) {
+    const r = await rpc('get_support_request', { p_id: id });
+    return r && r[0] ? r[0] : null;
+  }
+  // 복구 요청함(관리자) — 목록/답변
+  async function listSupportRequests() {
+    return (await rpc('list_support_requests', {})) || [];
+  }
+  async function answerSupportRequest(id, token, note) {
+    return await rpc('answer_support_request', { p_id: id, p_token: token, p_note: note || '' });
+  }
   async function answerRequest(id, message) {
     // 직접 UPDATE 금지(보안): 회신은 정해진 4종(REPLIES) 인덱스로만 서버 RPC가 확정.
     const idx = REPLIES.indexOf(message);
@@ -317,7 +332,7 @@ window.PARKLINK = (function () {
     setAuth, adminLogin, adminRestore, adminLogout, verifyAdminPin,
     listVehicles, getVehicle, createVehicle, extendVehicle, setExpireInDays,
     setOwnerPhone, removeVehicle, markRenewNotified, statusOf, subMonths,
-    sendRequest, answerRequest, recoverOwnerLink, listRequests, getRequest, latestAnswered, logShock, listShocks, reset,
+    sendRequest, answerRequest, recoverOwnerLink, createSupportRequest, getSupportRequest, listSupportRequests, answerSupportRequest, listRequests, getRequest, latestAnswered, logShock, listShocks, reset,
     senderUrl, panelUrl, ownerUrl, tokenFromUrl, qrSvg, qrDataUrl,
     telDigits, fmtDate, fmtTime, timeAgo, urgencyBadge, statusBadge,
   };

@@ -50,6 +50,7 @@
   <div class="tabnav" id="tabnav">
     <button class="tabbtn active" data-tab="dashboard">가입자현황</button>
     <button class="tabbtn" data-tab="subs">구독신청관리</button>
+    <button class="tabbtn" data-tab="recover">복구요청</button>
     <button class="tabbtn" data-tab="list">가입자목록</button>
     <button class="tabbtn" data-tab="errors">에러로그</button>
   </div>
@@ -91,6 +92,17 @@
         <span class="muted" id="subsCount"></span>
         <button class="btn btn-ghost btn-sm" id="subsRefresh">새로고침</button></div>
       <div id="subsList" class="mt8 muted">불러오는 중…</div>
+    </div>
+  </section>
+
+  <!-- 2-1) 복구요청 -->
+  <section class="tabpanel" id="tab-recover" style="display:none">
+    <div class="card">
+      <div class="row"><h2 style="margin:0">🔁 차주 화면 복구 요청</h2><span class="spacer"></span>
+        <span class="muted" id="supCount"></span>
+        <button class="btn btn-ghost btn-sm" id="supRefresh">새로고침</button></div>
+      <p class="muted mt8" style="font-size:12.5px">차주가 등록 정보 확인을 요청한 건입니다. 전화번호로 매칭된 차량을 확인하고, 본인이 맞으면 <b>기존 차주 화면 주소</b>를 전달하세요. (신규 발급 아님)</p>
+      <div id="supList" class="mt8 muted">불러오는 중…</div>
     </div>
   </section>
 
