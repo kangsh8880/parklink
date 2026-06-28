@@ -123,7 +123,7 @@ function showAdminToast(msg, isError) {
 }
 
 /* ---------- 관리자 게이트 (PIN 1차 + Supabase Auth 2차) ---------- */
-const ADMIN_PIN = '8880'; // ⚠️ 배포 전 반드시 변경하세요 (소프트 1차 차단용)
+const ADMIN_PIN = '0000'; // ⚠️ 배포 전 반드시 변경하세요 (소프트 1차 차단용)
 let adminStarted = false;
 function startAdmin() {
   if (adminStarted) return; adminStarted = true;

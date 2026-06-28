@@ -48,18 +48,15 @@ window.PARKASSIST = (function () {
   let confirmRetry = 0;
   function confirmListen() {
     mode = 'confirm';
-    status('🎙️ <b>삐</b> 소리 후 “네” 또는 “아니요” 라고 말해주세요');
-    PARKVOICE.cue();
-    setTimeout(function () {
-      PARKVOICE.listen({
-        onStart: () => status('🎙️ 듣고 있어요 — “네” 또는 “아니요”'),
-        onResult: (t) => { heard(t); route(t); },
-        onError: () => {
-          if (confirmRetry < 2) { confirmRetry++; status('못 들었어요. 한 번 더 — <b>삐</b> 소리 후 “네/아니요”'); confirmListen(); }
-          else { status('확인을 못 들었어요. 아래 <b>확인 / 취소</b> 버튼을 눌러주세요.'); }
-        },
-      });
-    }, 180);
+    status('🎙️ 잠시 후 “네” 또는 “아니요” 라고 말해주세요');
+    PARKVOICE.listen({
+      onStart: () => { PARKVOICE.cue(); status('🎙️ 듣고 있어요 — “네” 또는 “아니요”'); },
+      onResult: (t) => { heard(t); route(t); },
+      onError: () => {
+        if (confirmRetry < 2) { confirmRetry++; status('못 들었어요. 한 번 더 — “네” 또는 “아니요”'); confirmListen(); }
+        else { status('확인을 못 들었어요. 아래 <b>확인</b> 버튼을 눌러주세요.'); }
+      },
+    });
   }
 
   async function route(t) {
@@ -86,15 +83,18 @@ window.PARKASSIST = (function () {
   async function doRun() {
     if (!pending) return;
     const p = pending; pending = null; mode = 'idle'; confirmRetry = 0;
-    status('처리하고 있어요…');
+    PARKVOICE.stop();
+    status('네, 차주에게 보내고 있어요…');
+    // 전송 의사 확인 멘트(보내겠다고 안내) 후 실제 전송
+    PARKVOICE.speak('네, 차주에게 보내겠습니다.');
     try {
-      const msg = await p.run();
-      status('✓ ' + (msg || '완료했어요'));
-      // 완료 안내를 끝까지 말한 뒤 패널 자동 닫힘
-      PARKVOICE.speak(msg || '완료했어요.', () => { setTimeout(close, 1400); });
+      const msg = await p.run();              // 실제 전송 + 화면을 대기(step-sent) 모드로 전환
+      status('✓ ' + (msg || '차주에게 보냈어요'));
+      // 잠시 후 AI 패널을 닫아 대기 화면으로 복귀
+      setTimeout(close, 1300);
     } catch (e) {
-      status('실패: ' + e.message);
-      PARKVOICE.speak('처리하지 못했어요. 다시 시도해 주세요.', () => { setTimeout(close, 1600); });
+      status('전송 실패: ' + e.message);
+      PARKVOICE.speak('전송하지 못했어요. 다시 시도해 주세요.', () => { setTimeout(close, 1600); });
     }
   }
 
