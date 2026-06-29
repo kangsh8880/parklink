@@ -75,6 +75,10 @@
     "“추가”를 누르면 완료됩니다.": "Tap “Add” to finish.",
     "브라우저 주소창의 “설치” 아이콘 또는 메뉴를 여세요.": "Open the “Install” icon or menu in the address bar.",
     "“홈 화면에 추가 / 설치”를 선택하세요.": "Choose “Add to Home Screen / Install”.",
+    "열린 차주 화면의": "On the opened owner screen, tap the",
+    "버튼을 누르세요.": "button.",
+    "버튼이 보이지 않으면 화면의 순서 안내대로 추가하세요:": "If the button isn't shown, follow the on-screen steps:",
+    "아래 버튼을 누르면 홈 화면에 추가됩니다. 버튼이 없으면 안내된 순서대로 추가하세요.": "Tap the button below to add it to your home screen. If there's no button, follow the steps shown.",
 
     // ── confirm/alert ──
     "데모 데이터를 모두 비울까요?": "Reset all demo data?",
