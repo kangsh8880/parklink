@@ -197,6 +197,7 @@
     "📷 발신자(스캔) 화면": "📷 Sender (scan) screen",
     "📱 차주 화면 홈 화면에 추가": "📱 Add owner screen to home",
     "📱 홈 화면에 추가": "📱 Add to home screen",
+    "📲 홈 화면에 추가": "📲 Add to home screen",
     "차주 화면을 휴대폰 홈에 추가하면 앱처럼 바로 열 수 있어요. 추가된 아이콘은": "Add the owner screen to your phone home to open it like an app. The added icon links directly to the",
     "으로 바로 연결됩니다.": ".",
     "아래": "Tap",

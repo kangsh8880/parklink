@@ -1,6 +1,39 @@
 /* 차주 화면 — Supabase 연동 + 요청 알림(기본 ON, 토글로 끄기/켜기) */
 const $ = s => document.querySelector(s);
 const token = PARKLINK.tokenFromUrl();
+
+/* 홈 화면에 추가 시 '이 차주화면'에 고정되도록 전용 manifest 주입.
+   (공통 manifest는 start_url=open.html 이라 마지막 방문 화면으로 빠지는 문제가 있음) */
+(function ownerManifest() {
+  if (!token) return;
+  try {
+    const dir = (location.origin + location.pathname).replace(/[^/]*$/, '');
+    const startUrl = location.origin + location.pathname + '?v=' + encodeURIComponent(token);
+    const m = {
+      name: 'PARKLINK 차주', short_name: 'PARKLINK',
+      start_url: startUrl, scope: dir,
+      display: 'standalone', orientation: 'portrait',
+      background_color: '#ffffff', theme_color: '#365C89', lang: 'ko',
+      icons: [
+        { src: dir + 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: dir + 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: dir + 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+      ]
+    };
+    const href = URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/manifest+json' }));
+    let link = document.querySelector('link[rel="manifest"]');
+    if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link); }
+    link.href = href;
+  } catch (e) {}
+})();
+
+/* 설치 프롬프트 캐치(Android Chrome 등) — ⋮ 메뉴 없이 버튼으로 바로 추가 */
+let deferredA2HS = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredA2HS = e;
+  const b = document.getElementById('ahbInstall'); if (b) b.style.display = 'inline-flex';
+});
+
 const OFF_KEY = 'parklink:notifOff:' + token;   // 사용자가 끈 상태 기억
 let busy = false;
 let phoneInit = false;
@@ -101,6 +134,19 @@ async function boot() {
       $('#ahbSteps').innerHTML = PARKLINK.a2hsSteps();
       banner.style.display = 'block';
       const x = $('#ahbClose'); if (x) x.addEventListener('click', () => { banner.style.display = 'none'; });
+      const inst = $('#ahbInstall');
+      if (inst) {
+        if (deferredA2HS) inst.style.display = 'inline-flex';
+        inst.addEventListener('click', async () => {
+          if (deferredA2HS) {
+            deferredA2HS.prompt();
+            try { await deferredA2HS.userChoice; } catch (e) {}
+            deferredA2HS = null; inst.style.display = 'none';
+          } else {
+            $('#ahbSteps').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        });
+      }
     }
   }
 
