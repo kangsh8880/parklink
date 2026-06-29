@@ -23,6 +23,7 @@
     "토큰": "Token",
     "데모": "Demo",
     "복사": "Copy",
+    "차주 화면 주소 — 이 주소로 접속해 앱 설치·알림 설정을 하세요": "Owner screen address — open this to install the app and set up alerts",
     "차주 화면": "owner screen",
     "QR에는 차량 고유": "The QR contains only the vehicle's unique",
 

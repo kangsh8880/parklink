@@ -393,10 +393,11 @@ function supRow(r) {
   const dt = PARKLINK.fmtDate(Number(r.created_at));
   const memo = r.memo ? `<div class="muted" style="font-size:12.5px">메모: ${escHtml(r.memo)}</div>` : '';
   if (r.status === 'answered') {
+    const ownerUrl = location.origin + location.pathname.replace(/[^/]*$/, '') + 'owner.html?v=' + (r.answer_token || '');
     return `<div class="req answered">
       <div><b>${escHtml(r.name)}</b> · ${escHtml(r.phone)} <span class="muted">(${dt})</span></div>
       ${memo}
-      <div class="answer">✓ 전달함 · 토큰 ${escHtml(r.answer_token || '')}</div></div>`;
+      <div class="answer">✓ 전달함 · <a href="${escHtml(ownerUrl)}" target="_blank" style="word-break:break-all">${escHtml(ownerUrl)}</a></div></div>`;
   }
   const match = r.match_token
     ? `<div class="note mt8"><span>✅</span><span>전화번호 매칭: <b>${escHtml(r.match_name || '')}</b> · 토큰 <b>${escHtml(r.match_token)}</b></span></div>`
@@ -419,7 +420,8 @@ async function answerSup(id) {
   const token = (tokEl ? tokEl.value : '').trim();
   const note = (noteEl ? noteEl.value : '').trim();
   if (!token) { alert('전달할 차량 토큰을 입력하세요.'); return; }
-  if (!confirm('이 차주에게 토큰 ' + token + ' 의 차주 화면 주소를 전달할까요?')) return;
+  const ownerUrl = location.origin + location.pathname.replace(/[^/]*$/, '') + 'owner.html?v=' + token;
+  if (!confirm('이 차주에게 다음 차주 화면 주소를 전달할까요?\n\n' + ownerUrl)) return;
   try {
     await PARKLINK.answerSupportRequest(id, token, note);
     alert('전달 완료');

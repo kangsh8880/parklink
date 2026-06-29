@@ -25,6 +25,17 @@ function showAnswered(s) {
     $('#ansNoteBox').style.display = 'flex';
   }
   $('#openOwner').setAttribute('href', 'owner.html?v=' + s.answer_token + '&addhome=1');
+  // 전체 접속 URL 표시 + 복사
+  const fullUrl = location.origin + location.pathname.replace(/[^/]*$/, '') + 'owner.html?v=' + s.answer_token;
+  const urlEl = $('#ownerUrl');
+  if (urlEl) urlEl.value = fullUrl;
+  const copyBtn = $('#copyUrl');
+  if (copyBtn) copyBtn.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(fullUrl); }
+    catch (e) { if (urlEl) { urlEl.focus(); urlEl.select(); document.execCommand('copy'); } }
+    const old = copyBtn.textContent; copyBtn.textContent = '복사됨';
+    setTimeout(() => { copyBtn.textContent = old; }, 1500);
+  });
   $('#a2hsSteps').innerHTML = PARKLINK.a2hsSteps();
 }
 
