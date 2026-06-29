@@ -438,6 +438,8 @@
   });
 
   function start() {
+    document.documentElement.setAttribute('translate', 'no');
+    document.documentElement.classList.add('notranslate');
     injectBar();
     apply();
     mo.observe(document.body, { childList: true, subtree: true });
