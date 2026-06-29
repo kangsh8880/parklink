@@ -2,8 +2,17 @@
 self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 
-// PWA 설치(installable) 조건 충족용 fetch 핸들러 (네트워크 그대로 통과)
-self.addEventListener('fetch', () => {});
+// 같은 출처의 HTML/JS/CSS/manifest는 항상 최신(network-first, no-store)으로 받아
+// 차주화면 코드가 옛 버전으로 고정되지 않게 한다. 그 외(데이터 API 등)는 그대로 통과.
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  let url;
+  try { url = new URL(req.url); } catch (e) { return; }
+  if (url.origin === self.location.origin && /\.(html|js|css|webmanifest)$/.test(url.pathname)) {
+    event.respondWith(fetch(req, { cache: 'no-store' }).catch(() => fetch(req)));
+  }
+});
 
 self.addEventListener('push', event => {
   let data = {};

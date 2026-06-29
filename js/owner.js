@@ -2,30 +2,10 @@
 const $ = s => document.querySelector(s);
 const token = PARKLINK.tokenFromUrl();
 
-/* 홈 화면에 추가 시 '이 차주화면'에 고정되도록 전용 manifest 주입.
-   (공통 manifest는 start_url=open.html 이라 마지막 방문 화면으로 빠지는 문제가 있음) */
-(function ownerManifest() {
-  if (!token) return;
-  try {
-    const dir = (location.origin + location.pathname).replace(/[^/]*$/, '');
-    const startUrl = location.origin + location.pathname + '?v=' + encodeURIComponent(token);
-    const m = {
-      name: 'PARKLINK 차주', short_name: 'PARKLINK',
-      start_url: startUrl, scope: dir,
-      display: 'standalone', orientation: 'portrait',
-      background_color: '#ffffff', theme_color: '#365C89', lang: 'ko',
-      icons: [
-        { src: dir + 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-        { src: dir + 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-        { src: dir + 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
-      ]
-    };
-    const href = URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/manifest+json' }));
-    let link = document.querySelector('link[rel="manifest"]');
-    if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link); }
-    link.href = href;
-  } catch (e) {}
-})();
+/* 홈 화면 추가/알림은 정적 manifest.webmanifest(WebAPK)로 처리한다.
+   동적 Blob manifest는 Android에서 정식 앱 대신 바로가기로 설치되어
+   알림이 OS에 연결되지 않으므로 사용하지 않는다.
+   차주화면 고정은 manifest start_url=open.html → lastOwnerToken 리다이렉트로 보장. */
 
 /* 설치 프롬프트 캐치(Android Chrome 등) — ⋮ 메뉴 없이 버튼으로 바로 추가 */
 let deferredA2HS = null;
@@ -197,6 +177,13 @@ async function boot() {
   render();
   PARKLINK.liveRequests(token, render, 2500);  // 실시간 구독(폴백: 폴링)
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  // 최신 코드 수신: 진입/복귀 시 서비스워커 업데이트 체크
+  try {
+    navigator.serviceWorker.getRegistration().then(r => { if (r) r.update(); });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) { try { navigator.serviceWorker.getRegistration().then(r => { if (r) r.update(); }); } catch (e) {} }
+    });
+  } catch (e) {}
   initAssistant();
 }
 
