@@ -66,6 +66,29 @@
     "구독 만료": "Subscription expired",
     "선행 생성 실패": "Setup creation failed",
 
+    // ── a2hs 홈화면 추가 안내 ──
+    "화면 하단의 “공유” 버튼(□↑)을 누르세요.": "Tap the “Share” button (□↑) at the bottom.",
+    "목록에서 “홈 화면에 추가”를 선택하세요.": "Choose “Add to Home Screen” from the list.",
+    "오른쪽 위 “추가”를 누르면 완료됩니다.": "Tap “Add” at the top right to finish.",
+    "오른쪽 위 “⋮ 메뉴”를 누르세요.": "Tap the “⋮ menu” at the top right.",
+    "“홈 화면에 추가”(또는 앱 설치)를 선택하세요.": "Choose “Add to Home screen” (or Install app).",
+    "“추가”를 누르면 완료됩니다.": "Tap “Add” to finish.",
+    "브라우저 주소창의 “설치” 아이콘 또는 메뉴를 여세요.": "Open the “Install” icon or menu in the address bar.",
+    "“홈 화면에 추가 / 설치”를 선택하세요.": "Choose “Add to Home Screen / Install”.",
+
+    // ── confirm/alert ──
+    "데모 데이터를 모두 비울까요?": "Reset all demo data?",
+    "에러 로그를 전체 삭제할까요?": "Delete all error logs?",
+    "이 차량 구독을 해지하고 매핑을 삭제할까요?": "Cancel this vehicle's subscription and delete the mapping?",
+    "지금은 응답할 새 요청이 없어요. 그래도 진행할까요?": "No new requests to answer right now. Proceed anyway?",
+    "알겠습니다. 취소할게요.": "OK, cancelled.",
+    "취소했어요.": "Cancelled.",
+    "관리자 재발급 요청함은 준비 중입니다. 우선 차량명·전화번호를 다시 확인해 주세요.": "The admin recovery inbox is being prepared. Please re-check the vehicle name and phone first.",
+    "전달할 차량 토큰을 입력하세요.": "Enter the vehicle token to send.",
+    "등록되지 않은 토큰입니다. 가입자목록에서 정확한 토큰을 확인하세요.": "Unregistered token. Check the exact token in the subscriber list.",
+    "전달 완료": "Sent",
+    "요청을 찾을 수 없습니다.": "Request not found.",
+
     // ── index ──
     "PARKLINK · 양방향 안심 스마트 주차패드": "PARKLINK · Two-way smart parking pad",
     "번호는 숨기고, 소통은 양방향으로": "Numbers hidden, contact two-way",
@@ -477,9 +500,32 @@
     }));
   });
 
+  function tr(s) {
+    if (lang === 'en' && typeof s === 'string') {
+      const k = s.trim();
+      if (DICT[k] !== undefined) return s.replace(k, DICT[k]);
+    }
+    return s;
+  }
+
+  let _wrapped = false;
+  function wrapDialogs() {
+    if (_wrapped) return; _wrapped = true;
+    ['alert', 'confirm', 'prompt'].forEach(function (fn) {
+      const orig = window[fn] && window[fn].bind(window);
+      if (!orig) return;
+      window[fn] = function () {
+        const a = [].slice.call(arguments);
+        if (a.length) a[0] = tr(a[0]);
+        return orig.apply(window, a);
+      };
+    });
+  }
+
   function start() {
     document.documentElement.setAttribute('translate', 'no');
     document.documentElement.classList.add('notranslate');
+    wrapDialogs();
     injectBar();
     apply();
     mo.observe(document.body, { childList: true, subtree: true });

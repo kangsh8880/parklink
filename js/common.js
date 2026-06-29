@@ -224,9 +224,9 @@ window.PARKLINK = (function () {
     const ua = navigator.userAgent || '';
     const isIOS = /iPhone|iPad|iPod/i.test(ua);
     const isAndroid = /Android/i.test(ua);
-    if (isIOS) return '<ol class="steps"><li>화면 하단의 <b>공유</b> 버튼(□↑)을 누르세요.</li><li>목록에서 <b>홈 화면에 추가</b>를 선택하세요.</li><li>오른쪽 위 <b>추가</b>를 누르면 완료됩니다.</li></ol>';
-    if (isAndroid) return '<ol class="steps"><li>오른쪽 위 <b>⋮ 메뉴</b>를 누르세요.</li><li><b>홈 화면에 추가</b>(또는 앱 설치)를 선택하세요.</li><li><b>추가</b>를 누르면 완료됩니다.</li></ol>';
-    return '<ol class="steps"><li>브라우저 주소창의 <b>설치</b> 아이콘 또는 메뉴를 여세요.</li><li><b>홈 화면에 추가 / 설치</b>를 선택하세요.</li></ol>';
+    if (isIOS) return '<ol class="steps"><li>화면 하단의 “공유” 버튼(□↑)을 누르세요.</li><li>목록에서 “홈 화면에 추가”를 선택하세요.</li><li>오른쪽 위 “추가”를 누르면 완료됩니다.</li></ol>';
+    if (isAndroid) return '<ol class="steps"><li>오른쪽 위 “⋮ 메뉴”를 누르세요.</li><li>“홈 화면에 추가”(또는 앱 설치)를 선택하세요.</li><li>“추가”를 누르면 완료됩니다.</li></ol>';
+    return '<ol class="steps"><li>브라우저 주소창의 “설치” 아이콘 또는 메뉴를 여세요.</li><li>“홈 화면에 추가 / 설치”를 선택하세요.</li></ol>';
   }
 
   async function recordConsent(token) {
