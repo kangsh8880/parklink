@@ -1,18 +1,19 @@
 name: Keep Alive
 
-# 목적:
-#  1) 매일 1회 Supabase DB에 가벼운 요청을 보내 무료 프로젝트의
-#     '1주일 미사용 시 일시정지'를 방지한다.
-#  2) 리포에 타임스탬프 커밋을 남겨, GitHub의 '60일 커밋 없으면
-#     예약 워크플로 자동 비활성화' 정책도 함께 회피한다.
+# 목적: 무료 프로젝트의 '7일 미사용 시 일시정지'를 방지한다.
+# 개선점(v2):
+#  - REST select 대신 실제 DB 함수(RPC get_vehicle)를 호출해 '확실한 DB 활동'을 만든다.
+#  - 하루 2회 실행으로 활동 밀도를 높인다.
+#  - HTTP 000(연결 실패)/5xx를 실패로 처리한다. (v1은 000을 성공으로 오인했음)
 
 on:
   schedule:
-    - cron: '23 15 * * *'      # 매일 15:23 UTC (한국시간 00:23). 정시는 지연이 잦아 피함.
-  workflow_dispatch:            # Actions 탭에서 수동 실행(테스트)용
+    - cron: '23 3 * * *'      # 매일 03:23 UTC (한국 12:23)
+    - cron: '23 15 * * *'     # 매일 15:23 UTC (한국 00:23)
+  workflow_dispatch:
 
 permissions:
-  contents: write               # 타임스탬프 커밋/푸시 권한
+  contents: write
 
 concurrency:
   group: keep-alive
@@ -25,22 +26,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ping Supabase (keep DB awake)
+      - name: Ping Supabase RPC (real DB activity)
         run: |
-          # anon(publishable) 키는 클라이언트에 이미 공개되는 키이므로 노출돼도 안전하다.
-          code=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://ydladdffjqpcjynqpjdd.supabase.co/rest/v1/vehicles?select=token&limit=1" \
-            -H "apikey: sb_publishable_hqsnudfSFzN78mCy3s92Qw_ZXBMl782")
-          echo "Supabase responded: HTTP $code"
-          # 요청이 DB에 도달하기만 하면 활동으로 집계된다(권한 결과와 무관).
-          # 서버 장애(5xx)만 실패로 간주한다.
-          if [ "$code" -ge 500 ]; then
-            echo "Supabase server error"; exit 1
+          KEY="sb_publishable_hqsnudfSFzN78mCy3s92Qw_ZXBMl782"
+          BASE="https://ydladdffjqpcjynqpjdd.supabase.co/rest/v1"
+          # 1) 실제 함수 실행: get_vehicle (anon 실행 가능, DB 쿼리를 실제로 돌린다)
+          code=$(curl -s -o /tmp/resp.txt -w "%{http_code}" -X POST "$BASE/rpc/get_vehicle" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" \
+            --data '{"p_token":"keepalive-ping"}' --max-time 30)
+          echo "RPC get_vehicle -> HTTP $code"
+          head -c 300 /tmp/resp.txt || true; echo
+          # 2) 보조: 테이블 REST 요청도 한 번 더 두드린다
+          code2=$(curl -s -o /dev/null -w "%{http_code}" \
+            "$BASE/vehicles?select=token&limit=1" \
+            -H "apikey: $KEY" --max-time 30)
+          echo "REST vehicles -> HTTP $code2"
+          # 판정: 둘 다 '도달' 실패(000) 또는 서버 오류(5xx)면 실패로 알림
+          fail=1
+          for c in "$code" "$code2"; do
+            if [ -n "$c" ] && [ "$c" != "000" ] && [ "$c" -lt 500 ]; then fail=0; fi
+          done
+          if [ "$fail" = "1" ]; then
+            echo "::error::Supabase unreachable (get_vehicle=$code, vehicles=$code2)"
+            exit 1
           fi
+          echo "Keep-alive OK: Supabase reached."
 
       - name: Record timestamp (keep repo active)
         run: |
-          date -u +"%Y-%m-%dT%H:%M:%SZ  last keep-alive ping" > .keepalive
+          date -u +"%Y-%m-%dT%H:%M:%SZ  keep-alive ping" > .keepalive
           git config user.name  "keepalive-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .keepalive
